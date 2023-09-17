@@ -6,6 +6,8 @@ import {ApolloProvider} from '@apollo/client'
 
 import client from '../ultils/client'
 
+import StyledComponentsRegistry from './settings/registry'
+
 import './globals.css';
 import 'bootstrap/dist/css/bootstrap.css';
 
@@ -27,7 +29,9 @@ export default function RootLayout({
     >
       <html lang="en">
         <body className={`${inter.className}`}>
-          {children}
+          <StyledComponentsRegistry>
+            {children}
+          </StyledComponentsRegistry>
         </body>
       </html>
     </ApolloProvider>
