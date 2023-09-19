@@ -1,5 +1,6 @@
 import { ApolloClient, InMemoryCache, createHttpLink } from "@apollo/client"
 import {setContext} from '@apollo/client/link/context'
+import Cookies from 'js-cookie';
 
 const httpLink = createHttpLink({
   uri: process.env.API_HASURA ,
@@ -8,7 +9,7 @@ const httpLink = createHttpLink({
 const authLink = setContext((_, { headers }) => {
   // get the authentication token from local storage if it exists
   // return the headers to the context so httpLink can read them
-  const token = localStorage.getItem('token')
+  const token = Cookies.get('token');
   return {
     headers: {
       ...headers,

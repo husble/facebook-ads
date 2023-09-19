@@ -6,7 +6,8 @@ const nextConfig = {
   },
   env: {
     API_HASURA: process.env.API_HASURA,
-    PASS_HASURA: process.env.PASS_HASURA
+    PASS_HASURA: process.env.PASS_HASURA,
+    API_NODE: process.env.API_NODE
   }
 };
 
