@@ -2,24 +2,23 @@
 
 import { GET_PRODUCT_ADS, GET_STORES } from '#/graphql/query';
 import { useQuery } from '@apollo/client';
-import { Select, Table, Tag } from 'antd';
-import { Key, useRef, useState } from 'react';
+import { Button, Input, Select, Table, Tag } from 'antd';
+import { ChangeEvent, Key, useRef, useState } from 'react';
 
 import Settings from '#/components/Settings';
+import Step2 from '#/components/Step2';
 import withAuth from '#/ultils/withAuth';
+import debounce from 'lodash.debounce'
+import Image from 'next/image';
 
 const { Option } = Select;
+const LIMIT = 25
 
 type STORE = {
   id: Key;
   shop: String;
   timezone: String;
   name: String;
-};
-
-type Tag = {
-  id: number;
-  title: String;
 };
 
 type Product = {
@@ -29,13 +28,26 @@ type Product = {
   title: String;
   name_ads_account: String;
   vendor: String;
-  product_ads_tags: Tag[];
+  pr: String;
+  link: String;
+  product_typ: String;
+  image_url: String;
+  key: number;
 };
 function Home() {
   const [stores, setStores] = useState<STORE[]>([]);
   const [open, setOpen] = useState(false);
+  const [openStep2, setOpenStep2] = useState(false);
   const [ads, setAds] = useState([]);
-  const queries = useRef({});
+  const [total, setTotal] = useState<number>(0)
+  const [loading, setLoading] = useState<boolean>(false)
+  const queries = useRef({
+    where: {},
+    limit: LIMIT,
+    offset: 0
+  });
+  const [selecteds, setSelecteds] = useState<any[]>([]);
+  const [page, setPage] = useState<number>(1)
 
   useQuery(GET_STORES, {
     onCompleted: ({ store_2 }) => {
@@ -43,36 +55,34 @@ function Home() {
     }
   });
 
-  useQuery(GET_PRODUCT_ADS, {
+  const {refetch} = useQuery(GET_PRODUCT_ADS, {
     variables: {
-      where: queries.current
+      ...queries.current
     },
-    onCompleted: ({ product_ads }) => {
+    onCompleted: ({ product_ads, product_ads_aggregate }) => {
       setAds(product_ads);
-    }
+      setTotal(product_ads_aggregate.aggregate.count)
+      setLoading(false)
+    },
+    fetchPolicy: "cache-and-network"
   });
 
   const columns = [
     {
-      title: 'Date',
-      key: 'date',
-      dataIndex: 'date'
-    },
-    {
-      title: 'Camp',
-      key: 'name_ads_account',
-      dataIndex: 'name_ads_account'
+      title: 'Image',
+      key: 'image_url',
+      dataIndex: 'image_url',
+      render: (image_url: string) => <Image width={40} alt='image' src={image_url} />
     },
     {
       title: 'Title',
       key: 'title',
       dataIndex: 'title',
       render: (title: string, row: Product) => {
-        const vendor = row.vendor?.replaceAll(' ', '').toLowerCase();
         return (
           <a
             target="_blank"
-            href={`https://admin.shopify.com/store/${vendor}/products/${row.product_id}`}
+            href={`${row.link}`}
           >
             {title}
           </a>
@@ -81,26 +91,19 @@ function Home() {
     },
     {
       title: 'PR',
-      key: 'product_ads_tags',
-      dataIndex: 'product_ads_tags',
-      render: (product_ads_tags: Tag[]) => {
-        const PR = product_ads_tags.find(
-          (adsTag: Tag) => adsTag.title.indexOf('PR') !== -1
-        )?.title;
-
-        if (!PR) return null;
-        return <Tag color="blue">{PR}</Tag>;
-      }
+      key: 'pr',
+      dataIndex: 'pr',
+      render: (pr: String) => <Tag color="blue">{pr}</Tag>
     },
     {
       title: 'Tags',
-      key: 'product_ads_tags',
-      dataIndex: 'product_ads_tags',
-      render: (product_ads_tags: Tag[]) => (
+      key: 'tags',
+      dataIndex: 'tags',
+      render: (tags: string) => (
         <>
-          {product_ads_tags.map((tag: Tag) => (
-            <Tag key={tag.id} color="blue">
-              {tag.title}
+          {tags?.split(", ").map((tag: string) => (
+            <Tag key={tag} color="blue">
+              {tag}
             </Tag>
           ))}
         </>
@@ -108,13 +111,79 @@ function Home() {
     }
   ];
 
+  const handleGetNewData = () => {
+    refetch({
+      ...queries.current
+    })
+  }
+
   const handleSelectStore = (shop: String) => {
     console.log(shop, 'shop shopshop');
   };
 
+  const onSelectChange = (_: React.Key[], selectedRows: Product[]) => {
+    setSelecteds(selectedRows);
+  };
+
+  const rowSelection = {
+    selections: selecteds,
+    onChange: onSelectChange,
+    preserveSelectedRowKeys: true
+  };
+
+  const handleFilterAds = debounce((e: ChangeEvent<HTMLInputElement>) => {
+    const {value} = e.target
+    setLoading(true)
+    const new_queries = {
+      ...queries.current,
+      where: {
+        _or: [
+          {
+            title: {
+              _ilike: `%${value}%`
+            }
+          },
+          {
+            pr: {
+              _ilike: `%${value}%`
+            }
+          },
+          {
+            name_ads_account: {
+              _ilike: `%${value}%`
+            }
+          },
+          {
+            tags: {
+              _ilike: `%${value}%`
+            }
+          }
+        ]
+      },
+      offset: 0,
+      limit: LIMIT
+    }
+
+    queries.current = new_queries
+    setPage(1)
+    handleGetNewData()
+  }, 300)
+
+  const handleChangePge = (page: number) => {
+    setLoading(true)
+    const new_queries = {
+      ...queries.current,
+      offset: (page - 1) * LIMIT
+    }
+
+    queries.current = new_queries
+    handleGetNewData()
+    setPage(page)
+  }
+
   return (
     <div>
-      <header className="sticky top-0 z-50 py-4 px-5 shadow-shadow-section bg-white flex justify-between">
+      <header className="sticky top-0 z-50 py-4 px-5 shadow-shadow-section bg-white flex justify-between flex-wrap">
         <Select
           defaultValue="pawsionate.myshopify.com"
           onChange={handleSelectStore}
@@ -123,19 +192,30 @@ function Home() {
             label: store.shop
           }))}
         />
+        <Input allowClear className='w-[400px] inline-block' style={{ width: "400px !important"}} onChange={handleFilterAds} />
         <div>
-          <span onClick={() => setOpen(!open)} className="cursor-pointer">
+          <Button disabled={selecteds.length === 0 ? true : false} onClick={() => setOpenStep2(true)} type='primary' className='mr-4'>Next Step</Button>
+          <span onClick={() => setOpen(!open)} className="cursor-pointer font-bold text-black">
             Settings
           </span>
         </div>
       </header>
       <main>
-        <section className="py-3 px-5">
+        {selecteds.length ? (
+         <div className='px-5'>
+           <Tag color='orange'>Selected {selecteds.length} items</Tag>
+        </div>) : null}
+        <section className="px-5">
           <Table
             columns={columns}
             dataSource={ads}
+            rowSelection={rowSelection}
+            loading={loading}
             pagination={{
-              pageSize: 50
+              pageSize: 50,
+              current: page,
+              total,
+              onChange: handleChangePge
             }}
             scroll={{
               y: `calc(100vh - 100px)`
@@ -144,8 +224,9 @@ function Home() {
         </section>
       </main>
       <Settings open={open} setOpen={setOpen} />
+      <Step2 ads={selecteds} selects={selecteds} open={openStep2} setOpen={setOpenStep2} />
     </div>
   );
 }
 
-export default Home;
+export default withAuth(Home);

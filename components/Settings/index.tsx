@@ -2,10 +2,11 @@
 
 import { useMutation, useQuery } from '@apollo/client';
 import { Button, Input, Modal, Table, message } from 'antd'
-import React, { Key, useEffect, useRef, useState } from 'react'
+import React, { ChangeEvent, Key, useEffect, useRef, useState } from 'react'
 
-import { GET_SETTINGS_PRODUCT_ADS } from '#/graphql/query';
+import { GET_SETTINGS_PRODUCT_ADS, GET_SETTINGS_PRODUCT_TYPES } from '#/graphql/query';
 import { DeleteProductType, UpdateProductType } from '#/graphql/muation';
+import debounce from 'lodash.debounce';
 
 import AddNew from "#/components/Settings/AddNew"
 
@@ -29,6 +30,8 @@ type Ads = {
   product_types: ProductType[]
 }
 
+const LIMIT = 10
+
 function Index({open, setOpen}: ModalProps) {
   const [types, setTypes] = useState<ProductType[]>([])
   const [ads, setAds] = useState<ProductType[]>([])
@@ -36,32 +39,43 @@ function Index({open, setOpen}: ModalProps) {
   const [updateProductType] = useMutation(UpdateProductType)
   const [deleteProductType] = useMutation(DeleteProductType)
   const [idEdit, setIdEdit] = useState<number>(-1)
+  const [loading, setLoading] = useState<boolean>(false)
+  const [total, setTotal] = useState<number>(0)
+  const [page, setPage] = useState<number>(1)
 
   const nameRef: any = useRef(null)
   const descriptionRef: any = useRef(null)
   const valueRef: any = useRef(null)
+  const queries = useRef({
+    where: {},
+    limit: LIMIT,
+    offset: 0
+  })
 
-  const {refetch} = useQuery(GET_SETTINGS_PRODUCT_ADS, {
+  useQuery(GET_SETTINGS_PRODUCT_ADS, {
     onCompleted: ({setting_product_ads}) => {
-
-      const mappingData: ProductType[] = []
-      setting_product_ads.forEach((ad: Ads) => {
-        ad.product_types.forEach((product_type: ProductType) => {
-          const {description, title, id, value} = product_type
-          mappingData.push({
-            title,
-            description,
-            id,
-            value
-          })
-        })
-      })
-
-      setTypes(mappingData)
       setAds(setting_product_ads)
+    }
+  })
+
+  const {refetch} = useQuery(GET_SETTINGS_PRODUCT_TYPES, {
+    variables: {
+      ...queries.current
+    },
+    onCompleted: ({setting_product_type, setting_product_type_aggregate}) => {
+
+      setTypes(setting_product_type)
+      setTotal(setting_product_type_aggregate.aggregate.count)
+      setLoading(false)
     },
     fetchPolicy: "cache-and-network"
   })
+
+  const handleGetNewData = () => {
+    refetch({
+      ...queries.current
+    })
+  }
 
   const handleUpdateProductType = async (e: any) => {
     const title = nameRef.current.input.value
@@ -87,7 +101,9 @@ function Index({open, setOpen}: ModalProps) {
         }
       })
 
-      refetch()
+      refetch({
+        where: {}
+      })
       message.success("Successfull !!!")
       setIdEdit(-1)
     } catch (error) {
@@ -103,7 +119,9 @@ function Index({open, setOpen}: ModalProps) {
         }
       })
 
-      refetch()
+      refetch({
+        where: {}
+      })
       message.success("Successfull !!!")
     } catch (error) {
       message.error("Error !!!")
@@ -163,6 +181,37 @@ function Index({open, setOpen}: ModalProps) {
       )
     }
   ]
+
+  const handleSearch = debounce(async (e: ChangeEvent<HTMLInputElement>) => {
+    const {value} = e.target
+    setLoading(true)
+    const new_queries = {
+      ...queries.current,
+      where: {
+        title: {
+          _ilike: `%${value}%`
+        }
+      },
+      offset: 0,
+      limit: LIMIT
+    }
+
+    queries.current = new_queries
+    setPage(1)
+    handleGetNewData()
+  }, 300)
+
+  const handleChangePage = (page: number) => {
+    setLoading(true)
+    const new_queries = {
+      ...queries.current,
+      offset: (page - 1) * LIMIT
+    }
+
+    queries.current = new_queries
+    handleGetNewData()
+    setPage(page)
+  }
   
   return (
     <>
@@ -170,14 +219,29 @@ function Index({open, setOpen}: ModalProps) {
         open={open}
         onCancel={() => setOpen(false)}
         width="90vw"
-      > 
-        <div className='p-3'>
+        style={{
+          top: 20,
+          height: "calc(100vh - 40px)",
+          overflow: "hidden"
+        }}
+      >
+        <div className='p-3 h-5/6'>
           <div className='flex justify-end'>
+            <Input width={400} className='w-[400px] inline-block' style={{ width: "400px !important"}} allowClear onChange={handleSearch} />
             <Button type='primary' onClick={() => setOpenAdd(true)}>Add New</Button>
           </div>
           <Table
             columns={columns}
             dataSource={types}
+            loading={loading}
+            pagination={{
+              total,
+              current: page,
+              onChange: handleChangePage
+            }}
+            scroll={{
+              y: "calc(100vh - 240px)"
+            }}
           />
         </div>
       </Modal>

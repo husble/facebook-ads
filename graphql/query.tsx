@@ -1,18 +1,21 @@
 import { gql } from "@apollo/client";
 
 export const GET_PRODUCT_ADS = gql`
-  query product_ads($where: product_ads_bool_exp) {
-    product_ads(where: $where) {
+  query product_ads($where: product_ads_bool_exp, $limit: Int = 50, $offset: Int) {
+    product_ads(where: $where, limit: $limit, offset: $offset) {
       store_id
-      product_id
-      handle
       title
       name_ads_account
-      vendor
-
-      product_ads_tags {
-        id
-        title
+      image_url
+      product_type
+      link
+      pr
+      tags
+      key: id
+    }
+    product_ads_aggregate(where: $where) {
+      aggregate {
+        count
       }
     }
   }
@@ -36,13 +39,31 @@ export const GET_SETTINGS_PRODUCT_ADS = gql`
       title
       name
       description
+    }
+  }
+`
 
-      product_types: setting_product_types {
-        id
-        title
-        description
-        value
+export const GET_SETTINGS_PRODUCT_TYPES = gql`
+  query setting_product_type($where: setting_product_type_bool_exp, $limit: Int = 10, $offset: Int) {
+
+    setting_product_type(
+      where: $where
+      order_by: {
+        title: asc
+      }
+      limit: $limit
+      offset: $offset
+    ) {
+      id
+      title
+      description
+      value
+    }
+    setting_product_type_aggregate(where: $where) {
+      aggregate {
+        count
       }
     }
   }
+  
 `

@@ -7,19 +7,16 @@ import { redirect } from 'next/navigation';
 
 const withAuth = (BaseComponent: any) => {
   function App(props: any) {
-    const token: any = Cookies.get('token') || '';
-
-    let decoded: any = {};
-    console.log(token, "token")
-
-    if (token) {
-      decoded = jwt_decode(token);
-    }
-
+    
     useEffect(() => {
-      if (!token) redirect("/login")
+      const token: any = Cookies.get('token') || '';
+      if (!token) {
+        
+        return redirect("/login")
+      }
+      
     }, [])
-    return <BaseComponent user={decoded} {...props} />;
+    return <BaseComponent {...props} />;
   }
 
   return App;

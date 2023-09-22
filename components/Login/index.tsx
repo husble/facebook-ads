@@ -7,6 +7,7 @@ import Cookies from 'js-cookie';
 import Auth from '#/app/api/auth';
 import { Button, message } from 'antd';
 import { redirect } from 'next/navigation';
+import Image from 'next/image';
 
 export default function Index() {
   const [error, setError] = useState(null);
@@ -23,7 +24,7 @@ export default function Index() {
     .then(({ data }: any) => {
       const { token, username } = data;
       Cookies.set('token', token, { expires: 365 });
-      redirect("/")
+      window.location.href = "/"
     })
     .catch((error: any) => {
       setError(error?.data?.message);
@@ -32,74 +33,65 @@ export default function Index() {
   };
   return (
     <div className="login__page">
-      <div className="row">
-        <div className="col-12 offset-0  col-md-6 offset-md-3 col-lg-4 offset-lg-4">
-          <div className="login-wrap">
-            <div className="login">
-              <div className="login-logo">
-                <img src="https://cdn.husble.com/logo.svg" alt="" className="" />
-              </div>
-              <div className="login-info">
-                <div className="login-title">Login to your account</div>
-                <div className="login-form">
-                  <form onSubmit={login}>
-                    <div className="form-row">
-                      <div className="input-group mb-3">
-                        <div className="input-group-prepend">
-                          <span
-                            className="input-group-text"
-                            id="validationTooltipUsernamePrepend"
-                          >
-                            <UserOutlined className="site-form-item-icon" />
-                          </span>
-                        </div>
-                        <input
-                          type="text"
-                          className="form-control"
-                          name="email"
-                          id="validationTooltipUsername"
-                          placeholder="Username or Email"
-                          aria-describedby="validationTooltipUsernamePrepend"
-                          required
-                        />
-                      </div>
-                      <div className="input-group">
-                        <div className="input-group-prepend">
-                          <span
-                            className="input-group-text"
-                            id="validationTooltipPasswordPrepend"
-                          >
-                            <LockOutlined className="site-form-item-icon" />
-                          </span>
-                        </div>
-                        <input
-                          type="password"
-                          className="form-control"
-                          name="password"
-                          id="validationTooltipPassword"
-                          placeholder="Password"
-                          aria-describedby="validationTooltipPasswordPrepend"
-                          required
-                        />
-                      </div>
-                    </div>
-                    <div className="text-danger mt-1">{error}</div>
-                    {/* <div className="wrap__forgot">
-                      <div className="">
-                        <Link href="/forgot-password">Forgot Password ?</Link>
-                      </div>
+      <div className="w-screen h-screen flex items-center justify-center">
+        <div className="flex items-center justify-center flex-col max-w-[400px] w-[400px]">
+          <div className="flex justify-center">
+            <Image height={250} width={250} src="https://cdn.husble.com/logo.svg" alt="" className="inline-block" />
+          </div>
+          <div className="mt-4 w-full">
+            <div className="text-center font-bold mb-4">Login to your account</div>
+            <div className="login-form">
+              <form onSubmit={login}>
+                <div className="form-row">
+                  <div className="flex mb-3">
+                    {/* <div className="input-group-prepend">
+                      <span
+                        className="input-group-text"
+                        id="validationTooltipUsernamePrepend"
+                      >
+                        <UserOutlined className="site-form-item-icon" />
+                      </span>
                     </div> */}
-                    <Button
-                      className="w-100 btn-login"
-                      loading={loading}
-                      type="primary"
-                      htmlType="submit"
-                    >
-                      Log in
-                    </Button>
-                  </form>
+                    <input
+                      type="text"
+                      className="form-control"
+                      name="email"
+                      id="validationTooltipUsername"
+                      placeholder="Username or Email"
+                      aria-describedby="validationTooltipUsernamePrepend"
+                      required
+                    />
+                  </div>
+                  <div className="mb-3">
+                    {/* <div className="input-group-prepend">
+                      <span
+                        className="input-group-text"
+                        id="validationTooltipPasswordPrepend"
+                      >
+                        <LockOutlined className="site-form-item-icon" />
+                      </span>
+                    </div> */}
+                    <input
+                      type="password"
+                      className="form-control"
+                      name="password"
+                      id="validationTooltipPassword"
+                      placeholder="Password"
+                      aria-describedby="validationTooltipPasswordPrepend"
+                      required
+                    />
+                  </div>
                 </div>
-              </div>
+                <div className="text-danger mt-1">{error}</div>
+                <Button
+                  className="w-100 btn-login font-bold"
+                  loading={loading}
+                  type="primary"
+                  htmlType="submit"
+                >
+                  Log in
+                </Button>
+              </form>
             </div>
           </div>
         </div>
