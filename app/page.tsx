@@ -72,7 +72,7 @@ function Home() {
       title: 'Image',
       key: 'image_url',
       dataIndex: 'image_url',
-      render: (image_url: string) => <Image width={40} alt='image' src={image_url} />
+      render: (image_url: string) => <Image width={40} height={40} alt='image' src={image_url} />
     },
     {
       title: 'Title',

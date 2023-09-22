@@ -36,7 +36,7 @@ export default function Index() {
       <div className="w-screen h-screen flex items-center justify-center">
         <div className="flex items-center justify-center flex-col max-w-[400px] w-[400px]">
           <div className="flex justify-center">
-            <Image height={250} width={250} src="https://cdn.husble.com/logo.svg" alt="" className="inline-block" />
+            <Image height={250} width={250} src="https://cdn.husble.com/logo.svg" alt="image" className="inline-block" />
           </div>
           <div className="mt-4 w-full">
             <div className="text-center font-bold mb-4">Login to your account</div>
