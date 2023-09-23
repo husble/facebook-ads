@@ -1,7 +1,7 @@
 import { Select } from 'antd';
 
 const Index = ({ templateAds, setCurrentTemplate }: any) => {
-  const onChange = (value: any) => {
+  const onChange = (value: string) => {
     setCurrentTemplate(value);
   };
 

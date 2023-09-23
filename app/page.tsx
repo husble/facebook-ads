@@ -38,6 +38,11 @@ type Product = {
   template_user?: string;
   template_account?: string;
 };
+
+type ProductType = {
+  title: String;
+};
+
 function Home() {
   const [stores, setStores] = useState<STORE[]>([]);
   const [open, setOpen] = useState(false);
@@ -47,6 +52,7 @@ function Home() {
   const [loading, setLoading] = useState<boolean>(false);
   const [image_url, setImageUrl] = useState<string>('');
   const [storeCurrent, setStoreCurrent] = useState<Number>(200);
+  const [productTypes, setProductTypes] = useState<ProductType[]>([]);
 
   const queries = useRef({
     where: {
@@ -68,10 +74,15 @@ function Home() {
     variables: {
       ...queries.current
     },
-    onCompleted: ({ product_ads, product_ads_aggregate }) => {
+    onCompleted: ({ product_ads, product_ads_aggregate, product_types }) => {
       setAds(product_ads);
       setTotal(product_ads_aggregate.aggregate.count);
       setLoading(false);
+      setProductTypes(
+        product_types.map(
+          (t: ProductType) => t.title !== '' && { title: t.title }
+        )
+      );
     },
     fetchPolicy: 'cache-and-network'
   });
@@ -118,6 +129,26 @@ function Home() {
       key: 'pr',
       dataIndex: 'pr',
       render: (pr: String) => <Tag color="blue">{pr}</Tag>
+    },
+    {
+      title: 'Product Type',
+      key: 'product_type',
+      dataIndex: 'product_type',
+      render: (pr: String) => <Tag color="red">{pr}</Tag>,
+      filters: productTypes.map((p: ProductType) => ({
+        text: p?.title,
+        value: p?.title
+      })),
+      onFilter: (value: string, record: any) => {
+        // record.product_type.startsWith(value),
+        console.log(
+          '%cpage.tsx line:140 value , record ',
+          'color: #007acc;',
+          value,
+          record
+        );
+      },
+      filterSearch: true
     },
     {
       title: 'Tags',
@@ -290,7 +321,7 @@ function Home() {
       </main>
       <Settings open={open} setOpen={setOpen} />
       <Step2 ads={selecteds} open={openStep2} setOpen={setOpenStep2} />
-      <ModalImage setImageUrl={setImageUrl} image_url={image_url}/>
+      <ModalImage setImageUrl={setImageUrl} image_url={image_url} />
     </div>
   );
 }

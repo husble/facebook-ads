@@ -85,7 +85,7 @@ function Index({ currentTemplate, setCurrentTemplate }: any) {
         }}
       >
         <FileExcelOutlined style={{ fontSize: '16px' }} />
-        <span className="upload-text">Upload Cost</span>
+        <span className="upload-text">Upload Template</span>
       </label>
       <input
         id="file-input"

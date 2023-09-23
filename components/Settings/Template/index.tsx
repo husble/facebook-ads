@@ -7,7 +7,8 @@ import CSV from './CSV';
 
 import Style from './Style';
 import { useQuery } from '@apollo/client';
-import { GET_TEMPLATE_ADS } from '#/graphql/query';
+import { GET_TEMPLATE_ADS, GET_TEMPLATE_ADS_ITEMS } from '#/graphql/query';
+import List from './List';
 
 export interface TemplateAds {
   id: string;
@@ -23,6 +24,9 @@ export interface TemplateOption {
 function Index() {
   const [currentTemplate, setCurrentTemplate] = useState<string>('');
   const [templateAds, setTemplateAds] = useState<TemplateOption[]>([]);
+  const [loading, setLoading] = useState<boolean>(false);
+
+  const [templateAdsItems, setTemplateAdsItems] = useState([]);
 
   const { refetch } = useQuery(GET_TEMPLATE_ADS, {
     variables: {},
@@ -40,9 +44,32 @@ function Index() {
     fetchPolicy: 'cache-and-network'
   });
 
+  const dataTemplateAdsItems = useQuery(GET_TEMPLATE_ADS_ITEMS, {
+    variables: {},
+    onCompleted: ({ template_ads_item }) => {
+      setTemplateAdsItems(template_ads_item);
+    },
+    onError: (error) => {
+      console.log('%cindex.tsx line:32 error', 'color: #007acc;', error);
+    },
+    fetchPolicy: 'cache-and-network'
+  });
+
   useEffect(() => {
     refetch();
   }, []);
+
+  useEffect(() => {
+    if (currentTemplate) {
+      setLoading(true);
+
+      dataTemplateAdsItems.refetch({
+        id: currentTemplate
+      });
+
+      setLoading(false);
+    }
+  }, [currentTemplate, templateAdsItems]);
 
   return (
     <Style>
@@ -59,6 +86,7 @@ function Index() {
           />
         )}
       </div>
+      <List templateAdsItems={templateAdsItems} loading={loading} />
     </Style>
   );
 }
