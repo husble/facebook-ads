@@ -5,12 +5,15 @@ import { Button, Input, Select, Table, Tag } from 'antd';
 import { ChangeEvent, Key, useRef, useState } from 'react';
 import Image from 'next/image';
 import debounce from 'lodash.debounce';
+import { FilterOutlined } from '@ant-design/icons';
 
 import { GET_PRODUCT_ADS, GET_STORES } from '#/graphql/query';
 import Settings from '#/components/Settings';
 import Step2 from '#/components/Step2';
 import withAuth from '#/ultils/withAuth';
 import ModalImage from '#/components/ShowImage';
+import Filter from '#/components/Filter';
+import moment from 'moment';
 
 const LIMIT = 25;
 
@@ -37,6 +40,7 @@ type Product = {
   template_type?: string;
   template_user?: string;
   template_account?: string;
+  created_at_string: string;
 };
 
 type ProductType = {
@@ -53,6 +57,11 @@ function Home() {
   const [image_url, setImageUrl] = useState<string>('');
   const [storeCurrent, setStoreCurrent] = useState<Number>(200);
   const [productTypes, setProductTypes] = useState<ProductType[]>([]);
+  const [openFilter, setOpenFilter] = useState<boolean>(false);
+  const [paramsProductType, setParamsProductType] = useState<string>('');
+  const [paramsCreatedAt, setParamsCreatedAt] = useState<
+    Record<string, string>
+  >({ _lte: '', _gte: '' });
 
   const queries = useRef({
     where: {
@@ -119,7 +128,10 @@ function Home() {
       render: (title: string, row: Product) => {
         return (
           <a target="_blank" href={`${row.link}`}>
-            {title}
+            <div>{title}</div>
+            <Tag color="red">
+              {moment(row.created_at_string).format('DD/MM/YYYY mm:hh')}
+            </Tag>
           </a>
         );
       }
@@ -134,21 +146,7 @@ function Home() {
       title: 'Product Type',
       key: 'product_type',
       dataIndex: 'product_type',
-      render: (pr: String) => <Tag color="red">{pr}</Tag>,
-      filters: productTypes.map((p: ProductType) => ({
-        text: p?.title,
-        value: p?.title
-      })),
-      onFilter: (value: string, record: any) => {
-        // record.product_type.startsWith(value),
-        console.log(
-          '%cpage.tsx line:140 value , record ',
-          'color: #007acc;',
-          value,
-          record
-        );
-      },
-      filterSearch: true
+      render: (pr: String) => <Tag color="red">{pr}</Tag>
     },
     {
       title: 'Tags',
@@ -173,7 +171,6 @@ function Home() {
   };
 
   const handleSelectStore = (shop: String) => {
-    console.log(shop, stores, 'shop shopshop');
     const matchedStore = stores.find((s: STORE) => s.shop === shop);
 
     setLoading(true);
@@ -215,33 +212,42 @@ function Home() {
   };
 
   const handleFilterAds = debounce((e: ChangeEvent<HTMLInputElement>) => {
-    const { value } = e.target;
+    const value = e?.target?.value;
     setLoading(true);
+
+    const params: any = [];
+
+    if (value) {
+      ['title', 'pr', 'name_ads_account', 'tags'].map((s: string) => {
+        params.push({
+          [s]: {
+            _ilike: `%${value}%`
+          }
+        });
+      });
+    }
+
+    if (paramsProductType || value) {
+      params.push({
+        product_type: {
+          _ilike: `%${paramsProductType ? paramsProductType : value}%`
+        }
+      });
+    }
+
+    if (paramsCreatedAt['_lte']) {
+      params.push({
+        created_at_string: {
+          _lte: moment(paramsCreatedAt['_lte']).toISOString(true),
+          _gte: moment(paramsCreatedAt['_gte']).toISOString(true)
+        }
+      });
+    }
+
     const new_queries: any = {
       ...queries.current,
       where: {
-        _or: [
-          {
-            title: {
-              _ilike: `%${value}%`
-            }
-          },
-          {
-            pr: {
-              _ilike: `%${value}%`
-            }
-          },
-          {
-            name_ads_account: {
-              _ilike: `%${value}%`
-            }
-          },
-          {
-            tags: {
-              _ilike: `%${value}%`
-            }
-          }
-        ]
+        _or: [...params]
       },
       offset: 0,
       limit: LIMIT
@@ -283,6 +289,14 @@ function Home() {
         />
         <div>
           <Button
+            className="mx-4"
+            onClick={() => {
+              setOpenFilter(!openFilter);
+            }}
+          >
+            <FilterOutlined />
+          </Button>
+          <Button
             disabled={selecteds.length === 0 ? true : false}
             onClick={() => setOpenStep2(true)}
             type="primary"
@@ -319,6 +333,14 @@ function Home() {
           />
         </section>
       </main>
+      <Filter
+        open={openFilter}
+        setOpen={setOpenFilter}
+        productTypes={productTypes}
+        setParamsProductType={setParamsProductType}
+        handleFilterAds={handleFilterAds}
+        setParamsCreatedAt={setParamsCreatedAt}
+      />
       <Settings open={open} setOpen={setOpen} />
       <Step2 ads={selecteds} open={openStep2} setOpen={setOpenStep2} />
       <ModalImage setImageUrl={setImageUrl} image_url={image_url} />

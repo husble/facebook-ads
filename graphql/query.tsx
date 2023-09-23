@@ -27,6 +27,7 @@ export const GET_PRODUCT_ADS = gql`
       pr
       tags
       key: id
+      created_at_string
     }
     product_ads_aggregate(where: $where) {
       aggregate {
