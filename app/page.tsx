@@ -12,7 +12,7 @@ import Step2 from '#/components/Step2';
 import withAuth from '#/ultils/withAuth';
 import ModalImage from '#/components/ShowImage'
 
-const LIMIT = 25
+const LIMIT = 25;
 
 type STORE = {
   id: Key;
@@ -49,7 +49,7 @@ function Home() {
     offset: 0
   });
   const [selecteds, setSelecteds] = useState<any[]>([]);
-  const [page, setPage] = useState<number>(1)
+  const [page, setPage] = useState<number>(1);
 
   useQuery(GET_STORES, {
     onCompleted: ({ store_2 }) => {
@@ -57,16 +57,16 @@ function Home() {
     }
   });
 
-  const {refetch} = useQuery(GET_PRODUCT_ADS, {
+  const { refetch } = useQuery(GET_PRODUCT_ADS, {
     variables: {
       ...queries.current
     },
     onCompleted: ({ product_ads, product_ads_aggregate }) => {
       setAds(product_ads);
-      setTotal(product_ads_aggregate.aggregate.count)
-      setLoading(false)
+      setTotal(product_ads_aggregate.aggregate.count);
+      setLoading(false);
     },
-    fetchPolicy: "cache-and-network"
+    fetchPolicy: 'cache-and-network'
   });
 
   const handleShowImage = (image_url: string) => {
@@ -90,10 +90,7 @@ function Home() {
       dataIndex: 'title',
       render: (title: string, row: Product) => {
         return (
-          <a
-            target="_blank"
-            href={`${row.link}`}
-          >
+          <a target="_blank" href={`${row.link}`}>
             {title}
           </a>
         );
@@ -111,7 +108,7 @@ function Home() {
       dataIndex: 'tags',
       render: (tags: string) => (
         <>
-          {tags?.split(", ").map((tag: string) => (
+          {tags?.split(', ').map((tag: string) => (
             <Tag key={tag} color="blue">
               {tag}
             </Tag>
@@ -124,8 +121,8 @@ function Home() {
   const handleGetNewData = () => {
     refetch({
       ...queries.current
-    })
-  }
+    });
+  };
 
   const handleSelectStore = (shop: String) => {
     console.log(shop, 'shop shopshop');
@@ -142,8 +139,8 @@ function Home() {
   };
 
   const handleFilterAds = debounce((e: ChangeEvent<HTMLInputElement>) => {
-    const {value} = e.target
-    setLoading(true)
+    const { value } = e.target;
+    setLoading(true);
     const new_queries = {
       ...queries.current,
       where: {
@@ -172,24 +169,24 @@ function Home() {
       },
       offset: 0,
       limit: LIMIT
-    }
+    };
 
-    queries.current = new_queries
-    setPage(1)
-    handleGetNewData()
-  }, 300)
+    queries.current = new_queries;
+    setPage(1);
+    handleGetNewData();
+  }, 300);
 
   const handleChangePge = (page: number) => {
-    setLoading(true)
+    setLoading(true);
     const new_queries = {
       ...queries.current,
       offset: (page - 1) * LIMIT
-    }
+    };
 
-    queries.current = new_queries
-    handleGetNewData()
-    setPage(page)
-  }
+    queries.current = new_queries;
+    handleGetNewData();
+    setPage(page);
+  };
 
   return (
     <div>
@@ -202,19 +199,35 @@ function Home() {
             label: store.shop
           }))}
         />
-        <Input allowClear className='w-[400px] inline-block' style={{ width: "400px !important"}} onChange={handleFilterAds} />
+        <Input
+          allowClear
+          className="w-[400px] inline-block"
+          style={{ width: '400px !important' }}
+          onChange={handleFilterAds}
+        />
         <div>
-          <Button disabled={selecteds.length === 0 ? true : false} onClick={() => setOpenStep2(true)} type='primary' className='mr-4'>Next Step</Button>
-          <span onClick={() => setOpen(!open)} className="cursor-pointer font-bold text-black">
+          <Button
+            disabled={selecteds.length === 0 ? true : false}
+            onClick={() => setOpenStep2(true)}
+            type="primary"
+            className="mr-4"
+          >
+            Next Step
+          </Button>
+          <span
+            onClick={() => setOpen(!open)}
+            className="cursor-pointer font-bold text-black"
+          >
             Settings
           </span>
         </div>
       </header>
       <main>
         {selecteds.length ? (
-         <div className='px-5'>
-           <Tag color='orange'>Selected {selecteds.length} items</Tag>
-        </div>) : null}
+          <div className="px-5">
+            <Tag color="orange">Selected {selecteds.length} items</Tag>
+          </div>
+        ) : null}
         <section className="px-5">
           <Table
             columns={columns}
@@ -226,9 +239,6 @@ function Home() {
               current: page,
               total,
               onChange: handleChangePge
-            }}
-            scroll={{
-              y: `calc(100vh - 100px)`
             }}
           />
         </section>
