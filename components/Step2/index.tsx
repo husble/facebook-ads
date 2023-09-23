@@ -1,19 +1,17 @@
-import { Button, Drawer, Input, Select, Table, Tag } from 'antd'
-import React, { useCallback, useEffect, useState } from 'react'
+import { Button, Drawer, Input, Select, Table, Tag, message } from 'antd'
+import React, { ChangeEvent, useEffect, useState } from 'react'
+import debounce from 'lodash.debounce';
+import * as XLSX from 'xlsx';
+import * as FileSaver from 'file-saver';
 
 import {template_ads} from '#/ultils/config'
 import { useLazyQuery } from '@apollo/client';
 import { GET_TEMPLATE_ADS, GET_TEMPLATE_ITEMS } from '#/graphql/query';
-import Client from '#/ultils/client';
 
 type Tag = {
   id: number;
   title: String;
 };
-
-type TemplateAds = (keyof typeof template_ads)[]
-
-type ListKeys = TemplateAds[]
 
 type Product = {
   store_id: String;
@@ -30,6 +28,8 @@ type Product = {
   key: number;
   template_name?: string;
   template_type?: string;
+  template_user?: string;
+  template_account?: string;
 };
 
 function Index({open, setOpen, ads}: any) {
@@ -42,7 +42,6 @@ function Index({open, setOpen, ads}: any) {
     const names = Object.keys(template_ads)
     for (const name of names) {
       const dataOfTemplateNames = template_ads[name as keyof typeof template_ads]
-      console.log(dataOfTemplateNames, "dataOfTemplateNames")
 
       const findData = dataOfTemplateNames.find((templateName: string) => name_ads_account.indexOf(templateName) !== -1)
 
@@ -63,6 +62,9 @@ function Index({open, setOpen, ads}: any) {
       for await (const ad of ads) {
         const {name_ads_account} = ad
         const nameTemplate = getNameTemplateAds(name_ads_account)
+        const date = `${new Date().getDate()}`.slice(-2)
+        const month = `${new Date().getMonth()}`.slice(-2)
+        const addDateCamp = name_ads_account.replace("*", `${date}-${month}`)
         const {data: {template_ads}} = await getTemplateAds({
           variables: {
             where: {
@@ -79,6 +81,7 @@ function Index({open, setOpen, ads}: any) {
         const template =  template_ads[0]
         results.push({
           ...ad,
+          name_ads_account: addDateCamp,
           template_name: template.name,
           template_type: template.type 
         })
@@ -93,7 +96,6 @@ function Index({open, setOpen, ads}: any) {
   }, [ads])
 
   const handleSelectTypeOfTemplate = (value: any, row: Product) => {
-    console.log(value)
     const {key} = row
     const currentDatas: any = [...adsPreview]
     const findIndex = currentDatas.findIndex((data: Product) => data.key === key)
@@ -105,6 +107,43 @@ function Index({open, setOpen, ads}: any) {
 
     setAdsPreview(currentDatas)
   }
+
+  const handleChangeUser = debounce((e: ChangeEvent<HTMLInputElement>, row: any) => {
+    const {value} = e.target
+    const valueReplace = value || "**"
+    
+    const {key, name_ads_account, template_user} = row
+    const dataWantToReplace = template_user || "**"
+    const addUser = name_ads_account.replace(`-${dataWantToReplace}-`, `-${valueReplace}-`)
+
+    const currentDatas: any = [...adsPreview]
+    const findIndex = currentDatas.findIndex((data: Product) => data.key === key)
+
+    currentDatas[findIndex] = {
+      ...currentDatas[findIndex],
+      template_user: valueReplace,
+      name_ads_account: addUser
+    }
+    setAdsPreview(currentDatas)
+  }, 500)
+
+  const handleChangeAccount = debounce((e: ChangeEvent<HTMLInputElement>, row: any) => {
+    const {value} = e.target
+    const valueReplace = value || "***"
+    const {key, name_ads_account, template_account} = row
+    const dataWantToReplace = template_account || "***"
+    const addAccount = name_ads_account.replace(`-${dataWantToReplace}-`, `-${valueReplace}-`)
+
+    const currentDatas: any = [...adsPreview]
+    const findIndex = currentDatas.findIndex((data: Product) => data.key === key)
+
+    currentDatas[findIndex] = {
+      ...currentDatas[findIndex],
+      template_account: valueReplace,
+      name_ads_account: addAccount
+    }
+    setAdsPreview(currentDatas)
+  }, 500)
 
   const columns = [
     {
@@ -124,13 +163,13 @@ function Index({open, setOpen, ads}: any) {
       }
     },
     {
-      title: 'Camp',
+      title: 'Camp Name',
       key: 'name_ads_account',
       dataIndex: 'name_ads_account',
       width: 250,
     },
     {
-      title: 'Template',
+      title: 'Template Name',
       key: 'template',
       dataIndex: 'template',
       width: 300,
@@ -150,52 +189,128 @@ function Index({open, setOpen, ads}: any) {
       }
     },
     {
-      title: 'User',
+      title: 'Ads by User',
       key: 'user',
       dataIndex: 'user',
-      render: () => <Input placeholder='Phu'/>
+      width: 200,
+      render: (template_user: any, row: any) => <Input defaultValue={template_user} onChange={(e) => handleChangeUser(e, row)} placeholder='Phu' />
     },
     {
-      title: 'Account',
+      title: 'Account Ads',
       key: 'account',
-      dataIndex: 'account'
+      dataIndex: 'account',
+      width: 200,
+      render: (template_account: any, row: any) => <Input defaultValue={template_account} onChange={(e) => handleChangeAccount(e, row)} placeholder='Phu' />
     },
     {
       title: 'URL tags',
       key: 'url_tag',
-      dataIndex: 'url_tag'
+      dataIndex: 'url_tag',
+      width: 200
     },
     {
       title: 'Image Hash',
       key: 'image_hash',
-      dataIndex: 'image_hash'
+      dataIndex: 'image_hash',
+      width: 200
     }
   ]
 
   const handleExportCamp = async () => {
-    let dataExports: any = []
+    try {
+      
+    
+      setLoading(true)
+      let dataExports: any = []
 
-    for await (const ad of adsPreview) {
-      const {template_type, template_name} = ad
-      const {data: {template_ads_item}} = await getTemplateItems({
-        variables: {
-          "where": {
-            "template_ads": {
-              "name": {
-                "_eq": template_name
-              },
-              "type": {
-                "_eq": template_type
+      for await (const ad of adsPreview) {
+        const {template_type, template_name, name_ads_account, template_user} = ad
+        const {data: {template_ads_item}} = await getTemplateItems({
+          variables: {
+            "where": {
+              "template_ads": {
+                "name": {
+                  "_eq": template_name
+                },
+                "type": {
+                  "_eq": template_type
+                }
               }
             }
           }
-        }
-      })
+        })
+        const mapDatas = template_ads_item.map((ad_item: any) => ({
+          name_ads_account,
+          template_user,
+          ...ad_item
+        }))
+        dataExports = dataExports.concat(mapDatas)
+      }
 
-      dataExports = dataExports.concat(template_ads_item)
+      const result = dataExports.map((d: any) => ({
+        ['Ad Name']: d.ad_name,
+        ["Ad Status"]: d.ad_status,
+        ["Additional Custom Tracking Specs"]: d.additional_custom_tracking_specs,
+        ["Body"]: d.body,
+        ["Call to Action"]: d.call_to_action,
+        ["Conversion Tracking Pixels"]: d.conversion_tracking_pixels,
+        ["Creative Type"]: d.creative_type,
+        ["Degrees of Freedom Type"]: "USER_ENROLLED_AUTOFLOW",
+        ["Link"]: d.link,
+        ["Link Object ID"]: d.link_object_id,
+        ["Story ID"]: "",
+        ["URL Tags"]: `${d.url_tags}${d.template_user}`,
+        ["Use Page as Actor"]: d.use_page_as_actor,
+        ["Video ID"]: d.video_id,
+        ["Video Retargeting"]: d.video_retargeting,
+        ["Ad Set Bid Strategy"]: d.ad_set_bid_strategy,
+        ["Ad Set Daily Budget"]: d.ad_set_daily_budget,
+        ["Ad Set Lifetime Budget"]: d.ad_set_lifetime_budget,
+        ["Ad Set Lifetime Impressions"]: d.ad_set_lifetime_impressions,
+        ["Ad Set Name"]: d.ad_set_name,
+        ["Ad Set Run Status"]: d.ad_set_run_status,
+        ["Ad Set Time Start"]: d.ad_set_time_start,
+        ["Age Max"]: d.age_max,
+        ["Age Min"]: d.age_min,
+        ["Attribution Spec"]: d.attribution_spec,
+        ["Billing Event"]: d.billing_event,
+        ["Countries"]: d.countries,
+        ["Destination Type"]: d.destination_type,
+        ["Device Platforms"]: "mobile",
+        ["Excluded Custom Audiences"]: "",
+        ["Facebook Positions"]: "feed, facebook_reels, story",
+        ["Gender"]: d.gender,
+        ["Location Types"]: d.location_types,
+        ["Optimization Goal"]: d.optimization_goal,
+        ["Optimized Conversion Tracking Pixels"]: d.optimized_conversion_tracking_pixels,
+        ["Optimized Event"]: d.optimized_event,
+        ["Publisher Platforms"]: "facebook",
+        ["Use Accelerated Delivery"]: d.use_accelerated_delivery,
+        ["Buying Type"]: d.buying_type,
+        ["Campaign Name"]: d.name_ads_account,
+        ["Campaign Objective"]: d.campaign_objective,
+        ["Campaign Start Time"]: d.campaign_start_time,
+        ["Campaign Status"]: d.campaign_status,
+        ["New Objective"]: d.new_objective,
+      }));
+
+      const fileType =
+        'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet;charset=UTF-8';
+      const fileExtension = '.csv';
+
+      const uuid = Math.random();
+      const ws = XLSX.utils.json_to_sheet(result);
+      const wb = { Sheets: { data: ws }, SheetNames: ['data'] };
+      const excelBuffer = XLSX.write(wb, { bookType: 'csv', type: 'array' });
+      const data = new Blob([excelBuffer], { type: fileType });
+      FileSaver.saveAs(data, `order-${uuid}` + fileExtension);
+
+      message.success("Export successfull !!!")
+      setLoading(false)
+    } catch (error) {
+      message.error("Export error !!!")
+      setLoading(false)
     }
-
-    console.log(dataExports, "dataExports dataExports")
   }
 
   return (

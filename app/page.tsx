@@ -33,6 +33,10 @@ type Product = {
   product_typ: String;
   image_url: String;
   key: number;
+  template_name?: string;
+  template_type?: string;
+  template_user?: string;
+  template_account?: string;
 };
 function Home() {
   const [stores, setStores] = useState<STORE[]>([]);
@@ -156,11 +160,7 @@ function Home() {
         offset: 0,
         limit: LIMIT
       };
-      console.log(
-        '%cpage.tsx line:157 new_queries',
-        'color: #007acc;',
-        new_queries
-      );
+
       queries.current = new_queries;
 
       handleGetNewData();
