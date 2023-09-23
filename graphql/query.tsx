@@ -67,3 +67,21 @@ export const GET_SETTINGS_PRODUCT_TYPES = gql`
   }
   
 `
+
+export const GET_TEMPLATE_ADS = gql`
+  query template_ads($where: template_ads_bool_exp) {
+    template_ads(where: $where) {
+      id
+      name
+      type
+    }
+  }
+`
+
+export const GET_TEMPLATE_ITEMS = gql`
+  query template_ads_item($where: template_ads_item_bool_exp) {
+    template_ads_item(where: $where) {
+      ad_name
+    }
+  }
+`

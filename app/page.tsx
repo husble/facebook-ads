@@ -244,7 +244,7 @@ function Home() {
         </section>
       </main>
       <Settings open={open} setOpen={setOpen} />
-      <Step2 ads={selecteds} selects={selecteds} open={openStep2} setOpen={setOpenStep2} />
+      <Step2 ads={selecteds} open={openStep2} setOpen={setOpenStep2} />
       <ModalImage setImageUrl={setImageUrl} image_url={image_url}/>
     </div>
   );
