@@ -1,4 +1,4 @@
-import { Drawer, Input, Table } from 'antd'
+import { Button, Drawer, Input, Table } from 'antd'
 import React, { useEffect, useState } from 'react'
 
 type Tag = {
@@ -88,9 +88,10 @@ function Index({open, setOpen, ads, selects}: any) {
       onClose={() => setOpen(false)}
       width="90vw"
       placement='left'
-      title="Preview"
     >
-
+      <div className='flex justify-end'>
+        <Button type='primary'>Export CSV</Button>
+      </div>
       <Table
         columns={columns}
         dataSource={ads}

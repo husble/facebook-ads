@@ -1,17 +1,17 @@
 'use client';
 
-import { GET_PRODUCT_ADS, GET_STORES } from '#/graphql/query';
 import { useQuery } from '@apollo/client';
 import { Button, Input, Select, Table, Tag } from 'antd';
 import { ChangeEvent, Key, useRef, useState } from 'react';
+import Image from 'next/image';
+import debounce from 'lodash.debounce'
 
+import { GET_PRODUCT_ADS, GET_STORES } from '#/graphql/query';
 import Settings from '#/components/Settings';
 import Step2 from '#/components/Step2';
 import withAuth from '#/ultils/withAuth';
-import debounce from 'lodash.debounce'
-import Image from 'next/image';
+import ModalImage from '#/components/ShowImage'
 
-const { Option } = Select;
 const LIMIT = 25
 
 type STORE = {
@@ -41,6 +41,8 @@ function Home() {
   const [ads, setAds] = useState([]);
   const [total, setTotal] = useState<number>(0)
   const [loading, setLoading] = useState<boolean>(false)
+  const [image_url, setImageUrl] = useState<string>("")
+
   const queries = useRef({
     where: {},
     limit: LIMIT,
@@ -67,12 +69,20 @@ function Home() {
     fetchPolicy: "cache-and-network"
   });
 
+  const handleShowImage = (image_url: string) => {
+    setImageUrl(image_url)
+  }
+
   const columns = [
     {
       title: 'Image',
       key: 'image_url',
       dataIndex: 'image_url',
-      render: (image_url: string) => <Image width={40} height={40} alt='image' src={image_url} />
+      render: (image_url: string) => {
+        if (image_url) return <Image className='cursor-pointer' onClick={() => handleShowImage(image_url)} width={40} height={40} alt='image' src={image_url} />
+        
+        return null
+      }
     },
     {
       title: 'Title',
@@ -225,8 +235,9 @@ function Home() {
       </main>
       <Settings open={open} setOpen={setOpen} />
       <Step2 ads={selecteds} selects={selecteds} open={openStep2} setOpen={setOpenStep2} />
+      <ModalImage setImageUrl={setImageUrl} image_url={image_url}/>
     </div>
   );
 }
 
-export default withAuth(Home);
+export default Home
