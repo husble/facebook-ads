@@ -1,8 +1,17 @@
-import { gql } from "@apollo/client";
+import { gql } from '@apollo/client';
 
 export const GET_PRODUCT_ADS = gql`
-  query product_ads($where: product_ads_bool_exp, $limit: Int = 50, $offset: Int) {
-    product_ads(where: $where, limit: $limit, offset: $offset) {
+  query product_ads(
+    $where: product_ads_bool_exp
+    $limit: Int = 50
+    $offset: Int
+  ) {
+    product_ads(
+      where: $where
+      limit: $limit
+      offset: $offset
+      order_by: { created_at_string: desc }
+    ) {
       store_id
       title
       name_ads_account
@@ -19,18 +28,18 @@ export const GET_PRODUCT_ADS = gql`
       }
     }
   }
-`
+`;
 
 export const GET_STORES = gql`
   query store_2 {
-    store_2 {
+    store_2(where: { store_ads: { _is_null: false } }) {
       id
       shop
       timezone
       name
     }
   }
-`
+`;
 
 export const GET_SETTINGS_PRODUCT_ADS = gql`
   query setting_product_ads {
@@ -41,16 +50,17 @@ export const GET_SETTINGS_PRODUCT_ADS = gql`
       description
     }
   }
-`
+`;
 
 export const GET_SETTINGS_PRODUCT_TYPES = gql`
-  query setting_product_type($where: setting_product_type_bool_exp, $limit: Int = 10, $offset: Int) {
-
+  query setting_product_type(
+    $where: setting_product_type_bool_exp
+    $limit: Int = 10
+    $offset: Int
+  ) {
     setting_product_type(
       where: $where
-      order_by: {
-        title: asc
-      }
+      order_by: { title: asc }
       limit: $limit
       offset: $offset
     ) {
