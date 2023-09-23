@@ -4,13 +4,13 @@ import { useQuery } from '@apollo/client';
 import { Button, Input, Select, Table, Tag } from 'antd';
 import { ChangeEvent, Key, useRef, useState } from 'react';
 import Image from 'next/image';
-import debounce from 'lodash.debounce'
+import debounce from 'lodash.debounce';
 
 import { GET_PRODUCT_ADS, GET_STORES } from '#/graphql/query';
 import Settings from '#/components/Settings';
 import Step2 from '#/components/Step2';
 import withAuth from '#/ultils/withAuth';
-import ModalImage from '#/components/ShowImage'
+import ModalImage from '#/components/ShowImage';
 
 const LIMIT = 25;
 
@@ -39,12 +39,15 @@ function Home() {
   const [open, setOpen] = useState(false);
   const [openStep2, setOpenStep2] = useState(false);
   const [ads, setAds] = useState([]);
-  const [total, setTotal] = useState<number>(0)
-  const [loading, setLoading] = useState<boolean>(false)
-  const [image_url, setImageUrl] = useState<string>("")
+  const [total, setTotal] = useState<number>(0);
+  const [loading, setLoading] = useState<boolean>(false);
+  const [image_url, setImageUrl] = useState<string>('');
+  const [storeCurrent, setStoreCurrent] = useState<Number>(200);
 
   const queries = useRef({
-    where: {},
+    where: {
+      store_id: { _eq: 200 }
+    },
     limit: LIMIT,
     offset: 0
   });
@@ -70,8 +73,8 @@ function Home() {
   });
 
   const handleShowImage = (image_url: string) => {
-    setImageUrl(image_url)
-  }
+    setImageUrl(image_url);
+  };
 
   const columns = [
     {
@@ -79,9 +82,19 @@ function Home() {
       key: 'image_url',
       dataIndex: 'image_url',
       render: (image_url: string) => {
-        if (image_url) return <Image className='cursor-pointer' onClick={() => handleShowImage(image_url)} width={40} height={40} alt='image' src={image_url} />
-        
-        return null
+        if (image_url)
+          return (
+            <Image
+              className="cursor-pointer"
+              onClick={() => handleShowImage(image_url)}
+              width={40}
+              height={40}
+              alt="image"
+              src={image_url}
+            />
+          );
+
+        return null;
       }
     },
     {
@@ -125,7 +138,39 @@ function Home() {
   };
 
   const handleSelectStore = (shop: String) => {
-    console.log(shop, 'shop shopshop');
+    console.log(shop, stores, 'shop shopshop');
+    const matchedStore = stores.find((s: STORE) => s.shop === shop);
+
+    setLoading(true);
+
+    if (matchedStore) {
+      const storeId = matchedStore.id;
+      const new_queries = {
+        ...queries.current,
+        where: {
+          ...queries.current.where,
+          store_id: {
+            _eq: storeId
+          }
+        },
+        offset: 0,
+        limit: LIMIT
+      };
+      console.log(
+        '%cpage.tsx line:157 new_queries',
+        'color: #007acc;',
+        new_queries
+      );
+      queries.current = new_queries;
+
+      handleGetNewData();
+
+      setLoading(false);
+    } else {
+      // Handle the case where no matching store was found
+      setLoading(false);
+      console.log('No matching store found for shop:', shop);
+    }
   };
 
   const onSelectChange = (_: React.Key[], selectedRows: Product[]) => {
@@ -244,10 +289,15 @@ function Home() {
         </section>
       </main>
       <Settings open={open} setOpen={setOpen} />
-      <Step2 ads={selecteds} selects={selecteds} open={openStep2} setOpen={setOpenStep2} />
-      <ModalImage setImageUrl={setImageUrl} image_url={image_url}/>
+      <Step2
+        ads={selecteds}
+        selects={selecteds}
+        open={openStep2}
+        setOpen={setOpenStep2}
+      />
+      <ModalImage setImageUrl={setImageUrl} image_url={image_url} />
     </div>
   );
 }
 
-export default Home
+export default Home;
