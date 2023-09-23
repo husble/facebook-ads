@@ -1,12 +1,13 @@
 import { Button, Drawer, Input, Select, Table, Tag, message } from 'antd'
-import React, { ChangeEvent, useEffect, useState } from 'react'
+import React, { ChangeEvent, useEffect, useRef, useState } from 'react'
 import debounce from 'lodash.debounce';
 import * as XLSX from 'xlsx';
 import * as FileSaver from 'file-saver';
 
 import {template_ads} from '#/ultils/config'
-import { useLazyQuery } from '@apollo/client';
+import { useLazyQuery, useQuery } from '@apollo/client';
 import { GET_TEMPLATE_ADS, GET_TEMPLATE_ITEMS } from '#/graphql/query';
+import moment from 'moment';
 
 type Tag = {
   id: number;
@@ -23,20 +24,33 @@ type Product = {
   product_ads_tags: Tag[];
   pr: String;
   link: String;
-  product_typ: String;
+  product_type: String;
   image_url: String;
   key: number;
   template_name?: string;
   template_type?: string;
   template_user?: string;
   template_account?: string;
+  image_video?: string;
+  created_at_string: string;
+  link_object_id?: string;
 };
 
 function Index({open, setOpen, ads}: any) {
-  const [adsPreview, setAdsPreview] = useState([])
+  const [adsPreview, setAdsPreview] = useState<Product[]>([])
   const [loading, setLoading] = useState<boolean>(false)
+  const [templateType, setProductType] = useState<string>("image")
   const [getTemplateAds] = useLazyQuery(GET_TEMPLATE_ADS)
   const [getTemplateItems] = useLazyQuery(GET_TEMPLATE_ITEMS)
+  const templateAds = useRef([])
+  useQuery(GET_TEMPLATE_ADS, {
+    variables: {
+      where: {}
+    },
+    onCompleted: ({template_ads}) => {
+      templateAds.current = template_ads
+    }
+  })
 
   const getNameTemplateAds = (name_ads_account: string) => {
     const names = Object.keys(template_ads)
@@ -72,7 +86,7 @@ function Index({open, setOpen, ads}: any) {
                 _eq: nameTemplate
               },
               type: {
-                _eq: ad?.template_type || "image"
+                _eq: templateType
               }
             }
           }
@@ -102,7 +116,7 @@ function Index({open, setOpen, ads}: any) {
 
     currentDatas[findIndex] = {
       ...currentDatas[findIndex],
-      template_type: value
+      template_name: value
     }
 
     setAdsPreview(currentDatas)
@@ -145,6 +159,32 @@ function Index({open, setOpen, ads}: any) {
     setAdsPreview(currentDatas)
   }, 500)
 
+  const handleChangeImageVIdeo = debounce((e: ChangeEvent<HTMLInputElement>, row: Product) => {
+    const {value} = e.target
+
+    const currentDatas: Product[] = [...adsPreview]
+    const findIndex = currentDatas.findIndex((data: Product) => data.key === row.key)
+
+    currentDatas[findIndex] = {
+      ...currentDatas[findIndex],
+      image_video: value
+    }
+    setAdsPreview(currentDatas)
+  }, 500)
+
+  const handleChangeLinkObject = debounce((e: ChangeEvent<HTMLInputElement>, row: Product) => {
+    const {value} = e.target
+
+    const currentDatas: Product[] = [...adsPreview]
+    const findIndex = currentDatas.findIndex((data: Product) => data.key === row.key)
+
+    currentDatas[findIndex] = {
+      ...currentDatas[findIndex],
+      link_object_id: value
+    }
+    setAdsPreview(currentDatas)
+  }, 500)
+
   const columns = [
     {
       title: 'Title',
@@ -177,42 +217,47 @@ function Index({open, setOpen, ads}: any) {
 
         return (
           <div>
-            <Tag color="blue">{row.template_name}</Tag>
+            {/* <Tag color="blue">{row.template_name}</Tag> */}
             <Select
               onChange={(value) => handleSelectTypeOfTemplate(value, row)}
-              style={{width: "100px"}}
-              defaultValue={row.template_type}
-              options={[{value: "image", label: "Image"}, {value: "video", label: "Video"}]}
+              style={{width: "200px"}}
+              defaultValue={row.template_name}
+              options={templateAds.current.map((template: any) => ({
+                label: template.name,
+                value: template.name
+              }))}
             />
           </div>
         )
       }
     },
     {
-      title: 'Ads by User',
-      key: 'user',
-      dataIndex: 'user',
+      title: 'Ad Name',
+      key: 'template_user',
+      dataIndex: 'template_user',
       width: 200,
-      render: (template_user: any, row: any) => <Input defaultValue={template_user} onChange={(e) => handleChangeUser(e, row)} placeholder='Phu' />
+      render: (template_user: any, row: any) => <Input defaultValue={template_user} onChange={(e) => handleChangeUser(e, row)} placeholder='phu' />
     },
     {
-      title: 'Account Ads',
-      key: 'account',
-      dataIndex: 'account',
+      title: 'Ad Account',
+      key: 'template_account',
+      dataIndex: 'template_account',
       width: 200,
-      render: (template_account: any, row: any) => <Input defaultValue={template_account} onChange={(e) => handleChangeAccount(e, row)} placeholder='Phu' />
+      render: (template_account: any, row: any) => <Input defaultValue={template_account} onChange={(e) => handleChangeAccount(e, row)} placeholder='account123456' />
     },
     {
-      title: 'URL tags',
-      key: 'url_tag',
-      dataIndex: 'url_tag',
-      width: 200
+      title: 'Link Object ID',
+      key: 'link_object_id',
+      dataIndex: 'link_object_id',
+      width: 200,
+      render: (link_object_id: any, row: any) => <Input defaultValue={link_object_id} onChange={(e) => handleChangeLinkObject(e, row)} placeholder='Link Object ID' />
     },
     {
-      title: 'Image Hash',
-      key: 'image_hash',
-      dataIndex: 'image_hash',
-      width: 200
+      title: templateType === "image" ? 'Image Hash' : "Video ID",
+      key: 'image_video',
+      dataIndex: 'image_video',
+      width: 200,
+      render: (template_account: any, row: any) => <Input defaultValue={template_account} onChange={(e) => handleChangeImageVIdeo(e, row)} placeholder='Phu' />
     }
   ]
 
@@ -224,7 +269,7 @@ function Index({open, setOpen, ads}: any) {
       let dataExports: any = []
 
       for await (const ad of adsPreview) {
-        const {template_type, template_name, name_ads_account, template_user} = ad
+        const {template_type, template_name, name_ads_account, template_user, image_video, link, link_object_id} = ad
         const {data: {template_ads_item}} = await getTemplateItems({
           variables: {
             "where": {
@@ -240,15 +285,19 @@ function Index({open, setOpen, ads}: any) {
           }
         })
         const mapDatas = template_ads_item.map((ad_item: any) => ({
+          ...ad_item,
           name_ads_account,
           template_user,
-          ...ad_item
+          image_video,
+          link,
+          link_object_id
         }))
         dataExports = dataExports.concat(mapDatas)
       }
-
+      const LabelImageVideo = templateType === "image" ? "Image Hash" : "Video ID"
+      const time_start = `${moment().format("DD/MM/YYYY")} 12:00`
       const result = dataExports.map((d: any) => ({
-        ['Ad Name']: d.ad_name,
+        ['Ad Name']: d.template_user,
         ["Ad Status"]: d.ad_status,
         ["Additional Custom Tracking Specs"]: d.additional_custom_tracking_specs,
         ["Body"]: d.body,
@@ -261,7 +310,7 @@ function Index({open, setOpen, ads}: any) {
         ["Story ID"]: "",
         ["URL Tags"]: `${d.url_tags}${d.template_user}`,
         ["Use Page as Actor"]: d.use_page_as_actor,
-        ["Video ID"]: d.video_id,
+        [LabelImageVideo]: d.image_video,
         ["Video Retargeting"]: d.video_retargeting,
         ["Ad Set Bid Strategy"]: d.ad_set_bid_strategy,
         ["Ad Set Daily Budget"]: d.ad_set_daily_budget,
@@ -269,7 +318,7 @@ function Index({open, setOpen, ads}: any) {
         ["Ad Set Lifetime Impressions"]: d.ad_set_lifetime_impressions,
         ["Ad Set Name"]: d.ad_set_name,
         ["Ad Set Run Status"]: d.ad_set_run_status,
-        ["Ad Set Time Start"]: d.ad_set_time_start,
+        ["Ad Set Time Start"]: time_start,
         ["Age Max"]: d.age_max,
         ["Age Min"]: d.age_min,
         ["Attribution Spec"]: d.attribution_spec,
@@ -289,7 +338,7 @@ function Index({open, setOpen, ads}: any) {
         ["Buying Type"]: d.buying_type,
         ["Campaign Name"]: d.name_ads_account,
         ["Campaign Objective"]: d.campaign_objective,
-        ["Campaign Start Time"]: d.campaign_start_time,
+        ["Campaign Start Time"]: time_start,
         ["Campaign Status"]: d.campaign_status,
         ["New Objective"]: d.new_objective,
       }));
@@ -313,6 +362,16 @@ function Index({open, setOpen, ads}: any) {
     }
   }
 
+  const handleChangeTemplateType = (value: string) => {
+    const newDatas = adsPreview.map((ad: Product) => ({
+      ...ad,
+      template_type: value
+    }))
+
+    setProductType(value)
+    setAdsPreview(newDatas)
+  }
+
   return (
     <Drawer
       open={open}
@@ -320,7 +379,12 @@ function Index({open, setOpen, ads}: any) {
       width="90vw"
       placement='left'
     >
-      <div className='flex justify-end'>
+      <div className='flex justify-between'>
+        <Select
+          defaultValue="image"
+          options={[{label: "Image", value: "image"}, {label: "Video", value: "video"}]}
+          onChange={handleChangeTemplateType}
+        />
         <Button onClick={handleExportCamp} type='primary'>Export CSV</Button>
       </div>
       <Table

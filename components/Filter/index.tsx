@@ -5,7 +5,7 @@ import { useState } from 'react';
 
 const { RangePicker } = DatePicker;
 
-const App: React.FC = ({
+const App = ({
   open,
   setOpen,
   productTypes,

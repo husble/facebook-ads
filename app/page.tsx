@@ -33,7 +33,7 @@ type Product = {
   vendor: String;
   pr: String;
   link: String;
-  product_typ: String;
+  product_type: String;
   image_url: String;
   key: number;
   template_name?: string;
@@ -41,6 +41,8 @@ type Product = {
   template_user?: string;
   template_account?: string;
   created_at_string: string;
+  image_video?: string;
+  link_object_id?: string;
 };
 
 type ProductType = {
@@ -334,7 +336,6 @@ function Home() {
         </section>
       </main>
       <Filter
-        open={openFilter}
         setOpen={setOpenFilter}
         productTypes={productTypes}
         setParamsProductType={setParamsProductType}

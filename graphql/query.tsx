@@ -86,7 +86,7 @@ export const GET_SETTINGS_PRODUCT_TYPES = gql`
 
 export const GET_TEMPLATE_ADS = gql`
   query template_ads($where: template_ads_bool_exp) {
-    template_ads(where: $where) {
+    template_ads(where: $where, distinct_on: [name]) {
       id
       name
       type
