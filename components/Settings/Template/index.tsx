@@ -7,7 +7,7 @@ import CSV from './CSV';
 
 import Style from './Style';
 import { useQuery } from '@apollo/client';
-import { GET_TEMPLATE_ADS, GET_TEMPLATE_ADS_ITEMS } from '#/graphql/query';
+import { GET_TEMPLATE_ADS_LIST, GET_TEMPLATE_ADS_ITEMS } from '#/graphql/query';
 import List from './List';
 
 export interface TemplateAds {
@@ -28,7 +28,7 @@ function Index() {
 
   const [templateAdsItems, setTemplateAdsItems] = useState([]);
 
-  const { refetch } = useQuery(GET_TEMPLATE_ADS, {
+  const { refetch } = useQuery(GET_TEMPLATE_ADS_LIST, {
     variables: {},
     onCompleted: ({ template_ads }) => {
       setTemplateAds(

@@ -94,6 +94,16 @@ export const GET_TEMPLATE_ADS = gql`
   }
 `;
 
+export const GET_TEMPLATE_ADS_LIST = gql`
+  query template_ads {
+    template_ads(order_by: { name: asc }) {
+      id
+      name
+      type
+    }
+  }
+`;
+
 export const GET_TEMPLATE_ITEMS = gql`
   query template_ads_item($where: template_ads_item_bool_exp) {
     template_ads_item(where: $where) {
@@ -107,6 +117,7 @@ export const GET_TEMPLATE_ITEMS = gql`
       image_file_name
       image_hash
       instagram_account_id
+      device_platforms
       instagram_preview_link
       link
       link_description
@@ -150,6 +161,10 @@ export const GET_TEMPLATE_ITEMS = gql`
       ad_set_lifetime_impressions
       age_max
       age_min
+      instagram_positions
+      facebook_positions
+      messenger_positions
+      publisher_platforms
     }
   }
 `;
@@ -208,6 +223,7 @@ export const GET_TEMPLATE_ADS_ITEMS = gql`
       campaign_status
       new_objective
       template_ads_id
+      device_platforms
     }
   }
 `;

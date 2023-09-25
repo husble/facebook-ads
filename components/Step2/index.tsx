@@ -364,21 +364,27 @@ function Index({ open, setOpen, ads }: any) {
         ['Call to Action']: d.call_to_action,
         ['Conversion Tracking Pixels']: d.conversion_tracking_pixels,
         ['Creative Type']: d.creative_type,
-        ['Degrees of Freedom Type']: 'USER_ENROLLED_AUTOFLOW',
+        ['Image File Name']: d.image_file_name,
+        ['Image Hash']: d.image_hash,
+        ['Instagram Account ID']: d.instagram_account_id,
+        ['Instagram Preview Link']: d.instagram_preview_link,
         ['Link']: d.link,
+        ['Link Description']: d.link_description,
         ['Link Object ID']: d.link_object_id,
-        ['Story ID']: '',
-        ['URL Tags']: `${d.url_tags}${d.template_user}`,
+        ['Optimize text per person']: d.optimize_text_per_person,
+        ['Optimized Ad Creative']: d.optimized_ad_creative,
+        ['Permalink']: d.permalink,
+        ['Preview Link']: d.preview_link,
+        ['URL Tags']: d.url_tags,
         ['Use Page as Actor']: d.use_page_as_actor,
-        [LabelImageVideo]: d.image_video,
+        ['Video File Name']: d.video_file_name,
+        ['Video ID']: d.image_video,
         ['Video Retargeting']: d.video_retargeting,
         ['Ad Set Bid Strategy']: d.ad_set_bid_strategy,
         ['Ad Set Daily Budget']: d.ad_set_daily_budget,
         ['Ad Set Lifetime Budget']: d.ad_set_lifetime_budget,
         ['Ad Set Lifetime Impressions']: d.ad_set_lifetime_impressions,
         ['Ad Set Name']: d.ad_set_name,
-        ['Instagram Account ID']: d.instagram_account_id,
-        ['Instagram Preview Link']: d.instagram_preview_link,
         ['Ad Set Run Status']: d.ad_set_run_status,
         ['Ad Set Time Start']: time_start,
         ['Age Max']: d.age_max,
@@ -387,16 +393,18 @@ function Index({ open, setOpen, ads }: any) {
         ['Billing Event']: d.billing_event,
         ['Countries']: d.countries,
         ['Destination Type']: d.destination_type,
-        ['Device Platforms']: 'mobile',
-        ['Excluded Custom Audiences']: '',
-        ['Facebook Positions']: 'feed, facebook_reels, story',
+        ['Device Platforms']: d.device_platforms,
+        ['Facebook Positions']: d.facebook_positions,
+        ['Flexible Inclusions']: d.flexible_inclusions,
         ['Gender']: d.gender,
+        ['Instagram Positions']: d.instagram_positions,
         ['Location Types']: d.location_types,
+        ['Messenger Positions']: d.messenger_positions,
         ['Optimization Goal']: d.optimization_goal,
         ['Optimized Conversion Tracking Pixels']:
           d.optimized_conversion_tracking_pixels,
         ['Optimized Event']: d.optimized_event,
-        ['Publisher Platforms']: 'facebook',
+        ['Publisher Platforms']: d.device_platforms,
         ['Use Accelerated Delivery']: d.use_accelerated_delivery,
         ['Buying Type']: d.buying_type,
         ['Campaign Name']: d.name_ads_account,
@@ -406,12 +414,30 @@ function Index({ open, setOpen, ads }: any) {
         ['New Objective']: d.new_objective
       }));
 
+      const removeKeyFromObject = (obj: any, type: string) => {
+        if (type === 'image') {
+          const {
+            'Video File Name': videoFileName,
+            'Video ID': videoId,
+            ...rest
+          } = obj;
+          return { ...rest };
+        } else {
+          const { 'Link Description': linkDescription, ...rest } = obj;
+          return { ...rest };
+        }
+      };
+
+      const dataTemplates = result.map((obj: any) =>
+        removeKeyFromObject(obj, templateType)
+      );
+
       const fileType =
         'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet;charset=UTF-8';
       const fileExtension = '.csv';
 
       const uuid = Math.random();
-      const ws = XLSX.utils.json_to_sheet(result);
+      const ws = XLSX.utils.json_to_sheet(dataTemplates);
       const wb = { Sheets: { data: ws }, SheetNames: ['data'] };
       const excelBuffer = XLSX.write(wb, { bookType: 'csv', type: 'array' });
       const data = new Blob([excelBuffer], { type: fileType });

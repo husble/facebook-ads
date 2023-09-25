@@ -35,7 +35,11 @@ const App = ({
   const filterOption = (
     input: string,
     option: { label: string; value: string }
-  ) => (option?.label ?? '').toLowerCase().includes(input.toLowerCase());
+  ): boolean => {
+    return (
+      (option?.label ?? '').toLowerCase().includes(input.toLowerCase()) || false
+    );
+  };
 
   const handleSubmit = () => {
     console.log('%cindex.tsx line:30 objec', 'color: #007acc;');
