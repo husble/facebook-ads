@@ -9,8 +9,10 @@ const Index = ({ templateAds, setCurrentTemplate }: any) => {
     console.log('search:', value);
   };
 
-  const filterOption = (input: any, option: { label: any; value: any }) =>
-    (option?.label ?? '').toLowerCase().includes(input.toLowerCase());
+  const filterOption = (
+    input: string,
+    option: any
+  ) => option?.label?.toLowerCase()?.indexOf(input?.toLowerCase()) !== -1
 
   return (
     <div>

@@ -375,7 +375,7 @@ function Index({ open, setOpen, ads }: any) {
         ['Optimized Ad Creative']: d.optimized_ad_creative,
         ['Permalink']: d.permalink,
         ['Preview Link']: d.preview_link,
-        ['URL Tags']: d.url_tags,
+        ['URL Tags']: `${d.url_tags}${d.template_user}`,
         ['Use Page as Actor']: d.use_page_as_actor,
         ['Video File Name']: d.video_file_name,
         ['Video ID']: d.image_video,
@@ -404,7 +404,7 @@ function Index({ open, setOpen, ads }: any) {
         ['Optimized Conversion Tracking Pixels']:
           d.optimized_conversion_tracking_pixels,
         ['Optimized Event']: d.optimized_event,
-        ['Publisher Platforms']: d.device_platforms,
+        ['Publisher Platforms']: d.publisher_platforms,
         ['Use Accelerated Delivery']: d.use_accelerated_delivery,
         ['Buying Type']: d.buying_type,
         ['Campaign Name']: d.name_ads_account,
