@@ -6,7 +6,7 @@ import Select from './Select';
 import CSV from './CSV';
 
 import Style from './Style';
-import { useQuery } from '@apollo/client';
+import { useLazyQuery, useQuery } from '@apollo/client';
 import { GET_TEMPLATE_ADS_LIST, GET_TEMPLATE_ADS_ITEMS } from '#/graphql/query';
 import List from './List';
 import { Button } from 'antd';
@@ -24,11 +24,10 @@ export interface TemplateOption {
 }
 
 function Index() {
+  const [loading, setLoading] = useState<boolean>(false);
+  const [templateAdsItems, setTemplateAdsItems] = useState([]);
   const [currentTemplate, setCurrentTemplate] = useState<string>('');
   const [templateAds, setTemplateAds] = useState<TemplateOption[]>([]);
-  const [loading, setLoading] = useState<boolean>(false);
-
-  const [templateAdsItems, setTemplateAdsItems] = useState([]);
 
   const { refetch } = useQuery(GET_TEMPLATE_ADS_LIST, {
     variables: {},
@@ -46,7 +45,7 @@ function Index() {
     fetchPolicy: 'cache-and-network'
   });
 
-  const dataTemplateAdsItems = useQuery(GET_TEMPLATE_ADS_ITEMS, {
+  const [dataTemplateAdsItems, {}] = useLazyQuery(GET_TEMPLATE_ADS_ITEMS, {
     variables: {},
     onCompleted: ({ template_ads_item }) => {
       setTemplateAdsItems(template_ads_item);
@@ -57,6 +56,14 @@ function Index() {
     fetchPolicy: 'cache-and-network'
   });
 
+  const fetchTemplateAdsItems = async () => {
+    await dataTemplateAdsItems({
+      variables: {
+        id: currentTemplate
+      }
+    });
+  };
+
   useEffect(() => {
     refetch();
   }, []);
@@ -64,11 +71,7 @@ function Index() {
   useEffect(() => {
     if (currentTemplate) {
       setLoading(true);
-
-      dataTemplateAdsItems.refetch({
-        id: currentTemplate
-      });
-
+      fetchTemplateAdsItems();
       setLoading(false);
     }
   }, [currentTemplate, templateAdsItems]);
@@ -86,10 +89,17 @@ function Index() {
           <CSV
             currentTemplate={currentTemplate}
             setCurrentTemplate={setCurrentTemplate}
+            refetch={refetch}
+            fetchTemplateAdsItems={fetchTemplateAdsItems}
           />
         )}
       </div>
-      <List templateAdsItems={templateAdsItems} loading={loading} />
+      <List
+        templateAdsItems={templateAdsItems}
+        loading={loading}
+        refetch={refetch}
+        fetchTemplateAdsItems={fetchTemplateAdsItems}
+      />
     </Style>
   );
 }

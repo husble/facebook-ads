@@ -14,7 +14,6 @@ import withAuth from '#/ultils/withAuth';
 import ModalImage from '#/components/ShowImage';
 import Filter from '#/components/Filter';
 import moment from 'moment';
-import { createGlobalStyle } from 'styled-components';
 
 const LIMIT = 25;
 
@@ -58,23 +57,25 @@ function Home() {
   const [total, setTotal] = useState<number>(0);
   const [loading, setLoading] = useState<boolean>(false);
   const [image_url, setImageUrl] = useState<string>('');
-  const [storeCurrent, setStoreCurrent] = useState<Number>(200);
   const [productTypes, setProductTypes] = useState<ProductType[]>([]);
   const [openFilter, setOpenFilter] = useState<boolean>(false);
   const [paramsProductType, setParamsProductType] = useState<string>('');
+  const [selecteds, setSelecteds] = useState<any[]>([]);
+  const [page, setPage] = useState<number>(1);
   const [paramsCreatedAt, setParamsCreatedAt] = useState<
     Record<string, string>
   >({ _lte: '', _gte: '' });
 
+  const storeRef = useRef(200);
   const queries = useRef({
     where: {
-      store_id: { _eq: 200 }
+      _and: {
+        store_id: { _eq: 200 }
+      }
     },
     limit: LIMIT,
     offset: 0
   });
-  const [selecteds, setSelecteds] = useState<any[]>([]);
-  const [page, setPage] = useState<number>(1);
 
   useQuery(GET_STORES, {
     onCompleted: ({ store_2 }) => {
@@ -177,23 +178,30 @@ function Home() {
     const matchedStore = stores.find((s: STORE) => s.shop === shop);
 
     setLoading(true);
-
     if (matchedStore) {
-      const storeId = matchedStore.id;
+      const storeId = matchedStore.id as number;
       const new_queries: any = {
         ...queries.current,
         where: {
-          ...queries.current.where,
-          store_id: {
-            _eq: storeId
+          _and: {
+            ...queries.current.where._and,
+            store_id: {
+              _eq: storeId
+            }
           }
         },
         offset: 0,
         limit: LIMIT
       };
 
-      queries.current = new_queries;
+      storeRef.current = storeId;
 
+      queries.current = new_queries;
+      console.log(
+        '%cpage.tsx line:197 new_queries',
+        'color: #007acc;',
+        new_queries
+      );
       handleGetNewData();
 
       setLoading(false);
@@ -250,7 +258,12 @@ function Home() {
     const new_queries: any = {
       ...queries.current,
       where: {
-        _or: params[0] ? [...params] : [{ title: { _ilike: '%%' } }]
+        _and: {
+          store_id: {
+            _eq: storeRef.current
+          },
+          _or: params[0] ? [...params] : [{ title: { _ilike: '%%' } }]
+        }
       },
       offset: 0,
       limit: LIMIT
@@ -337,6 +350,7 @@ function Home() {
         </section>
       </main>
       <Filter
+        open={openFilter}
         setOpen={setOpenFilter}
         productTypes={productTypes}
         setParamsProductType={setParamsProductType}

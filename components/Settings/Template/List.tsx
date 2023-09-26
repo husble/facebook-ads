@@ -1,6 +1,42 @@
-import { Table } from 'antd';
+import { CopyOutlined, DeleteOutlined, EditOutlined } from '@ant-design/icons';
+import { useMutation } from '@apollo/client';
+import { Modal, Table, message } from 'antd';
 
-const Index = ({ templateAdsItems, loading }: any) => {
+import {
+  DeleteTemplateAdsItem,
+  InsertTemplateAdsItem
+} from '#/graphql/muation';
+import { useState } from 'react';
+
+const Index = ({
+  templateAdsItems,
+  loading,
+  refetch,
+  fetchTemplateAdsItems
+}: any) => {
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [nameTemplate, setNameTemplate] = useState<string>('');
+  const [type, setType] = useState<string>('image');
+
+  const showModal = () => {
+    setIsModalOpen(true);
+  };
+
+  const handleOk = () => {
+    setIsModalOpen(false);
+  };
+
+  const handleCancel = () => {
+    setIsModalOpen(false);
+  };
+
+  const handleChange = (value: string) => {
+    setType(value);
+  };
+
+  const [deleteTemplateAdsItem] = useMutation(DeleteTemplateAdsItem);
+  const [insertTemplateAdsItem] = useMutation(InsertTemplateAdsItem);
+
   const stringArray: string[] = [
     'ad_name',
     'ad_status',
@@ -51,18 +87,74 @@ const Index = ({ templateAdsItems, loading }: any) => {
     'campaign_objective',
     'campaign_start_time',
     'campaign_status',
-    'new_objective'
+    'new_objective',
+    'Action'
   ];
 
   const columns = stringArray.map((s: string) => ({
     title: s,
     key: s,
     dataIndex: s,
-    render: (pr: String) => <div>{pr}</div>
+    render: (pr: String, row: any) => {
+      if (s === 'Action') {
+        return (
+          <div style={{ cursor: 'pointer' }}>
+            <DeleteOutlined
+              onClick={async () => {
+                await deleteTemplateAdsItem({
+                  variables: {
+                    id: row.id
+                  }
+                });
+
+                fetchTemplateAdsItems();
+                refetch();
+                message.success('Delete Template Success');
+              }}
+            />
+            <CopyOutlined
+              className="mx-3"
+              color="blue"
+              onClick={async () => {
+                const data = { ...row };
+
+                delete data['id'];
+                delete data['__typename'];
+
+                await insertTemplateAdsItem({
+                  variables: {
+                    objects: [{ ...data }]
+                  }
+                });
+
+                fetchTemplateAdsItems();
+                refetch();
+                message.success('Clone Template Success');
+              }}
+            />
+
+            <EditOutlined
+              onClick={() => {
+                setIsModalOpen(!isModalOpen);
+              }}
+            />
+          </div>
+        );
+      }
+      return <div>{pr}</div>;
+    }
   }));
 
   return (
     <div>
+      <Modal
+        title="Update Template Ads Items"
+        open={isModalOpen}
+        onOk={handleOk}
+        onCancel={handleCancel}
+      >
+        Update Template Ads Item Waiting !!!
+      </Modal>
       <Table
         columns={columns}
         dataSource={templateAdsItems}
