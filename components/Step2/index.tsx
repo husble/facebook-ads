@@ -366,7 +366,7 @@ function Index({ open, setOpen, ads }: any) {
         ['Conversion Tracking Pixels']: d.conversion_tracking_pixels,
         ['Creative Type']: d.creative_type,
         ['Image File Name']: d.image_file_name,
-        ['Image Hash']: d.image_hash,
+        ['Image Hash']: d.image_video,
         ['Instagram Account ID']: d.instagram_account_id,
         ['Instagram Preview Link']: d.instagram_preview_link,
         ['Link']: d.link,
