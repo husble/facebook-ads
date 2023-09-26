@@ -68,7 +68,7 @@ const Index = ({ templateAdsItems, loading }: any) => {
         dataSource={templateAdsItems}
         // rowSelection={rowSelection}
         pagination={{
-          pageSize: 50
+          pageSize: 25
         }}
         scroll={{
           x: 'max-content'
