@@ -100,6 +100,11 @@ export const InsertTemplateAdsItem = gql`
           campaign_status
           new_objective
           template_ads_id
+          instagram_positions
+          facebook_positions
+          messenger_positions
+          device_platforms
+          publisher_platforms
         ]
       }
     ) {

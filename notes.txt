@@ -1,0 +1,111 @@
+Ad Name	
+Ad Status	
+Additional Custom Tracking Specs	
+Body	
+Call to Action	
+Conversion Tracking Pixels	
+Creative Type	
+Image File Name	
+Image Hash	
+Instagram Account ID	
+Instagram Preview Link	
+Link	
+Link Description	
+Link Object ID	
+Optimize text per person	
+Optimized Ad Creative	
+Permalink	
+Preview Link	
+URL Tags	
+Use Page as Actor	
+# Video File Name	
+# Video ID
+Video Retargeting	
+Ad Set Bid Strategy	
+Ad Set Daily Budget	
+Ad Set Lifetime Budget	
+Ad Set Lifetime Impressions	
+Ad Set Name	
+Ad Set Run Status	
+Ad Set Time Start	
+Age Max	
+Age Min	
+Attribution Spec	
+Billing Event	
+Countries	
+Destination Type	
+Device Platforms	
+Facebook Positions	
+Flexible Inclusions	
+Gender	
+Instagram Positions	
+Location Types	
+Messenger Positions	
+Optimization Goal	
+Optimized Conversion Tracking Pixels	
+Optimized Event	
+Publisher Platforms	
+Use Accelerated Delivery	
+Buying Type	
+Campaign Name	
+Campaign Objective	
+Campaign Start Time	
+Campaign Status	
+New Objective		
+
+vs
+
+Ad Name	
+Ad Status	
+Additional Custom Tracking Specs	
+Body	
+Call to Action	
+Conversion Tracking Pixels	
+Creative Type	
+Image File Name	
+Image Hash	
+Instagram Account ID	
+Instagram Preview Link	
+Link	
+# Link Description
+Link Object ID	
+Optimize text per person	
+Optimized Ad Creative	
+Permalink	
+Preview Link	
+URL Tags	
+Use Page as Actor	
+Video File Name	
+Video ID	
+Video Retargeting	
+Ad Set Bid Strategy	
+Ad Set Daily Budget	
+Ad Set Lifetime Budget	
+Ad Set Lifetime Impressions	
+Ad Set Name	
+Ad Set Run Status	
+Ad Set Time Start	
+Age Max	
+Age Min	
+Attribution Spec	
+Billing Event	
+Countries	
+Destination Type	
+Device Platforms	
+Facebook Positions	
+Flexible Inclusions	
+Gender	
+Instagram Positions	
+Location Types	
+Messenger Positions	
+Optimization Goal	
+Optimized Conversion Tracking Pixels	
+Optimized Event	
+Publisher Platforms	
+Use Accelerated Delivery	
+Buying Type	
+Campaign Name	
+Campaign Objective	
+Campaign Start Time	
+Campaign Status	
+New Objective		
