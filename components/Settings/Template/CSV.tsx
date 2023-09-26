@@ -7,7 +7,12 @@ import { Spin, message } from 'antd';
 import { transformArrayKeys } from '#/ultils/index';
 import { InsertTemplateAds, InsertTemplateAdsItem } from '#/graphql/muation';
 
-function Index({ currentTemplate, setCurrentTemplate }: any) {
+function Index({
+  currentTemplate,
+  setCurrentTemplate,
+  refetch,
+  fetchTemplateAdsItems
+}: any) {
   const [fileName, setFileName] = useState<string>('');
   const [loading, setLoading] = useState<boolean>(false);
 
@@ -49,6 +54,9 @@ function Index({ currentTemplate, setCurrentTemplate }: any) {
             }))
           }
         });
+
+        refetch();
+        fetchTemplateAdsItems();
 
         message.success('Import successfull!!!');
         setLoading(false);

@@ -172,6 +172,7 @@ export const GET_TEMPLATE_ITEMS = gql`
 export const GET_TEMPLATE_ADS_ITEMS = gql`
   query template_ads_item($id: uuid) {
     template_ads_item(where: { template_ads_id: { _eq: $id } }) {
+      id
       ad_name
       ad_status
       additional_custom_tracking_specs
