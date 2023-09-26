@@ -1,10 +1,15 @@
 import { ChangeEvent, ChangeEventHandler, useState } from 'react';
-import { Button, Input, Modal, Select } from 'antd';
+import { Button, Input, Modal, Select, message } from 'antd';
+import { useMutation } from '@apollo/client';
 
-const App: React.FC = () => {
+import { InsertTemplateAds } from '#/graphql/muation';
+
+const App = ({ refetch }: any) => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [nameTemplate, setNameTemplate] = useState<string>('');
   const [type, setType] = useState<string>('image');
+
+  const [insertTemplateAds] = useMutation(InsertTemplateAds);
 
   const showModal = () => {
     setIsModalOpen(true);
@@ -19,8 +24,37 @@ const App: React.FC = () => {
   };
 
   const handleChange = (value: string) => {
-    console.log('%cCreate.tsx line:20 value', 'color: #007acc;', value);
+    setType(value);
   };
+
+  const handleSubmit = async () => {
+    console.log(
+      '%cCreate.tsx line:26 nameTemplate , type',
+      'color: #007acc;',
+      nameTemplate,
+      type
+    );
+
+    try {
+      await insertTemplateAds({
+        variables: {
+          objects: [
+            {
+              name: nameTemplate,
+              type
+            }
+          ]
+        }
+      });
+      message.success('Create Template Success');
+      refetch();
+      setIsModalOpen(false);
+    } catch (error) {
+      message.error('Create Template Failed');
+      setIsModalOpen(false);
+    }
+  };
+
   return (
     <div className=" my-3">
       <Button type="primary" onClick={showModal}>
@@ -52,7 +86,7 @@ const App: React.FC = () => {
             ]}
           />
         </div>
-        <Button className="" type="primary">
+        <Button onClick={handleSubmit} className="" type="primary">
           Submit
         </Button>
       </Modal>

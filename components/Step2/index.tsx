@@ -43,6 +43,7 @@ function Index({ open, setOpen, ads }: any) {
   const [getTemplateAds] = useLazyQuery(GET_TEMPLATE_ADS);
   const [getTemplateItems] = useLazyQuery(GET_TEMPLATE_ITEMS);
   const templateAds = useRef([]);
+
   useQuery(GET_TEMPLATE_ADS, {
     variables: {
       where: {}
@@ -150,7 +151,7 @@ function Index({ open, setOpen, ads }: any) {
       };
       setAdsPreview(currentDatas);
     },
-    500
+    200
   );
 
   const handleChangeAccount = debounce(
@@ -176,7 +177,7 @@ function Index({ open, setOpen, ads }: any) {
       };
       setAdsPreview(currentDatas);
     },
-    500
+    200
   );
 
   const handleChangeImageVIdeo = debounce(
@@ -194,7 +195,7 @@ function Index({ open, setOpen, ads }: any) {
       };
       setAdsPreview(currentDatas);
     },
-    500
+    200
   );
 
   const handleChangeLinkObject = debounce(
@@ -212,7 +213,7 @@ function Index({ open, setOpen, ads }: any) {
       };
       setAdsPreview(currentDatas);
     },
-    500
+    200
   );
 
   const columns = [
@@ -441,7 +442,7 @@ function Index({ open, setOpen, ads }: any) {
       const wb = { Sheets: { data: ws }, SheetNames: ['data'] };
       const excelBuffer = XLSX.write(wb, { bookType: 'csv', type: 'array' });
       const data = new Blob([excelBuffer], { type: fileType });
-      FileSaver.saveAs(data, `order-${uuid}` + fileExtension);
+      FileSaver.saveAs(data, `ads-${uuid}` + fileExtension);
 
       message.success('Export successfull !!!');
       setLoading(false);

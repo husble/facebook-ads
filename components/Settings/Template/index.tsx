@@ -75,7 +75,7 @@ function Index() {
 
   return (
     <Style>
-      <Create />
+      <Create refetch={refetch} />
       <div className="d-flex">
         <Select
           templateAds={templateAds}
