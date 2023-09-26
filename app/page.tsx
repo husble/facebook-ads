@@ -14,6 +14,7 @@ import withAuth from '#/ultils/withAuth';
 import ModalImage from '#/components/ShowImage';
 import Filter from '#/components/Filter';
 import moment from 'moment';
+import { createGlobalStyle } from 'styled-components';
 
 const LIMIT = 25;
 
@@ -249,7 +250,7 @@ function Home() {
     const new_queries: any = {
       ...queries.current,
       where: {
-        _or: [...params]
+        _or: params[0] ? [...params] : [{ title: { _ilike: '%%' } }]
       },
       offset: 0,
       limit: LIMIT
@@ -327,7 +328,7 @@ function Home() {
             rowSelection={rowSelection}
             loading={loading}
             pagination={{
-              pageSize: 50,
+              pageSize: 25,
               current: page,
               total,
               onChange: handleChangePge
@@ -349,4 +350,4 @@ function Home() {
   );
 }
 
-export default Home;
+export default withAuth(Home);

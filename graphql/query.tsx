@@ -3,7 +3,7 @@ import { gql } from '@apollo/client';
 export const GET_PRODUCT_ADS = gql`
   query product_ads(
     $where: product_ads_bool_exp
-    $limit: Int = 50
+    $limit: Int = 25
     $offset: Int
   ) {
     product_types: product_ads(

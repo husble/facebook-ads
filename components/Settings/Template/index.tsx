@@ -9,6 +9,8 @@ import Style from './Style';
 import { useQuery } from '@apollo/client';
 import { GET_TEMPLATE_ADS_LIST, GET_TEMPLATE_ADS_ITEMS } from '#/graphql/query';
 import List from './List';
+import { Button } from 'antd';
+import Create from './Create';
 
 export interface TemplateAds {
   id: string;
@@ -73,6 +75,7 @@ function Index() {
 
   return (
     <Style>
+      <Create refetch={refetch} />
       <div className="d-flex">
         <Select
           templateAds={templateAds}
