@@ -91,11 +91,7 @@ function Home() {
       setAds(product_ads);
       setTotal(product_ads_aggregate.aggregate.count);
       setLoading(false);
-      setProductTypes(
-        product_types.map(
-          (t: ProductType) => t.title !== '' && { title: t.title }
-        )
-      );
+      setProductTypes(product_types);
     },
     fetchPolicy: 'cache-and-network'
   });
