@@ -1,12 +1,14 @@
 import { CopyOutlined, DeleteOutlined, EditOutlined } from '@ant-design/icons';
-import { useMutation } from '@apollo/client';
-import { Modal, Table, message } from 'antd';
+import { useLazyQuery, useMutation } from '@apollo/client';
+import { Button, Form, Input, Modal, Table, message } from 'antd';
 
 import {
   DeleteTemplateAdsItem,
-  InsertTemplateAdsItem
+  InsertTemplateAdsItem,
+  UpdateTemplateAdsItem
 } from '#/graphql/muation';
-import { useState } from 'react';
+import { useRef, useState } from 'react';
+import { GET_TEMPLATE_ADS_ITEM } from '#/graphql/query';
 
 const Index = ({
   templateAdsItems,
@@ -16,8 +18,12 @@ const Index = ({
 }: any) => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [nameTemplate, setNameTemplate] = useState<string>('');
+  const [dataEdit, setDataEdit]: any = useState({})
   const [type, setType] = useState<string>('image');
-
+  const [form] = Form.useForm()
+  const idEdit: any = useRef(null)
+  const [getTemplateItem]: any = useLazyQuery(GET_TEMPLATE_ADS_ITEM)
+  const [edit] = useMutation(UpdateTemplateAdsItem) 
   const showModal = () => {
     setIsModalOpen(true);
   };
@@ -91,6 +97,18 @@ const Index = ({
     'Action'
   ];
 
+  const handleEdit = async (id: string) => {
+    const {data: {template_ads_item_by_pk}} = await getTemplateItem({
+      variables: {
+        id
+      }
+    })
+
+    const {__typename, template_ads_id, id: idItem, ...data} = template_ads_item_by_pk
+    idEdit.current = id
+    setDataEdit(data)
+  }
+
   const columns = stringArray.map((s: string) => ({
     title: s,
     key: s,
@@ -135,7 +153,8 @@ const Index = ({
 
             <EditOutlined
               onClick={() => {
-                setIsModalOpen(!isModalOpen);
+                handleEdit(row.id)
+                setIsModalOpen(true);
               }}
             />
           </div>
@@ -145,6 +164,23 @@ const Index = ({
     }
   }));
 
+  const handleFinish = async (values: any) => {
+    try {
+      await edit({
+        variables: {
+          id: idEdit.current,
+          _set: {
+            ...values
+          }
+        }
+      })
+      fetchTemplateAdsItems()
+      message.success("Successfull !!!")
+    } catch (error) {
+      message.error("Error !!!")
+    }
+  }
+
   return (
     <div>
       <Modal
@@ -152,8 +188,30 @@ const Index = ({
         open={isModalOpen}
         onOk={handleOk}
         onCancel={handleCancel}
+        footer={null}
+        width="90vw"
+        style={{
+          top: 20,
+          height: 'calc(100vh - 40px)',
+          overflowY: 'auto'
+        }}
       >
-        Update Template Ads Item Waiting !!!
+        {Object.keys(dataEdit).length ? <Form
+          form={form}
+          onFinish={handleFinish}
+        >
+          {Object.keys(dataEdit).map((data: any) => (
+            <Form.Item
+              name={data}
+              label={data}
+              key={data}
+              initialValue={dataEdit[data]}
+            >
+              <Input />
+            </Form.Item>
+          ))}
+          <Button htmlType='submit' type='primary'>Edit</Button>
+        </Form> : null}
       </Modal>
       <Table
         columns={columns}

@@ -132,3 +132,19 @@ export const DeleteTemplateAds = gql`
     }
   }
 `
+
+export const UpdateTemplateAdsItem = gql`
+  mutation update_template_ads_item_by_pk(
+    $id: uuid!
+    $_set: template_ads_item_set_input
+  ) {
+    update_template_ads_item_by_pk(
+      pk_columns: {
+        id: $id
+      },
+      _set: $_set
+    ) {
+      id
+    }
+  }
+`;
