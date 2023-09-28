@@ -100,6 +100,7 @@ export const GET_TEMPLATE_ADS_LIST = gql`
       id
       name
       type
+      can_delete
     }
   }
 `;

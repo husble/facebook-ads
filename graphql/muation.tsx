@@ -123,3 +123,12 @@ export const DeleteTemplateAdsItem = gql`
     }
   }
 `;
+
+
+export const DeleteTemplateAds = gql`
+  mutation delete_template_ads_by_pk($id: uuid!) {
+    delete_template_ads_by_pk(id: $id) {
+      id
+    }
+  }
+`

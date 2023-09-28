@@ -79,8 +79,15 @@ function Index({ open, setOpen, ads }: any) {
         const { name_ads_account } = ad;
         const nameTemplate = getNameTemplateAds(name_ads_account);
         const date = `${new Date().getDate()}`.slice(-2);
-        const month = `${new Date().getMonth()}`.slice(-2);
-        const addDateCamp = name_ads_account.replace('*', `${date}-${month}`);
+        const month = `${new Date().getMonth() + 1}`.slice(-2);
+        let new_name_ads_account = name_ads_account.replace('*', `${date}-${month}`);
+        if (templateType === "image") {
+          new_name_ads_account = new_name_ads_account.replace(/G00|G02/gi, "G01")
+        }
+
+        if (templateType === "video") {
+          new_name_ads_account = new_name_ads_account.replace(/G00|G01/gi, "G02")
+        }
         const {
           data: { template_ads }
         } = await getTemplateAds({
@@ -99,7 +106,7 @@ function Index({ open, setOpen, ads }: any) {
         const template = template_ads[0];
         results.push({
           ...ad,
-          name_ads_account: addDateCamp,
+          name_ads_account: new_name_ads_account,
           template_name: template.name,
           template_type: template.type
         });
@@ -366,7 +373,7 @@ function Index({ open, setOpen, ads }: any) {
         ['Conversion Tracking Pixels']: d.conversion_tracking_pixels,
         ['Creative Type']: d.creative_type,
         ['Image File Name']: d.image_file_name,
-        ['Image Hash']: d.image_video,
+        ['Image Hash']: templateType === 'image' ? d.image_video : d.image_hash,
         ['Instagram Account ID']: d.instagram_account_id,
         ['Instagram Preview Link']: d.instagram_preview_link,
         ['Link']: d.link,
@@ -379,7 +386,7 @@ function Index({ open, setOpen, ads }: any) {
         ['URL Tags']: `${d.url_tags}${d.template_user}`,
         ['Use Page as Actor']: d.use_page_as_actor,
         ['Video File Name']: d.video_file_name,
-        ['Video ID']: d.image_video,
+        ['Video ID']: templateType === 'video' ? d.image_video : d.video_id,
         ['Video Retargeting']: d.video_retargeting,
         ['Ad Set Bid Strategy']: d.ad_set_bid_strategy,
         ['Ad Set Daily Budget']: d.ad_set_daily_budget,
@@ -453,10 +460,22 @@ function Index({ open, setOpen, ads }: any) {
   };
 
   const handleChangeTemplateType = (value: string) => {
-    const newDatas = adsPreview.map((ad: Product) => ({
-      ...ad,
-      template_type: value
-    }));
+    const newDatas = adsPreview.map((ad: Product) => {
+      const {name_ads_account} = ad
+      let new_name_ads_account = name_ads_account
+      if (value === "image") {
+        new_name_ads_account = new_name_ads_account.replace(/G00|G02/gi, "G01")
+      }
+
+      if (value === "video") {
+        new_name_ads_account = new_name_ads_account.replace(/G00|G01/gi, "G02")
+      }
+      return {
+        ...ad,
+        name_ads_account: new_name_ads_account,
+        template_type: value
+      }
+    });
 
     setProductType(value);
     setAdsPreview(newDatas);

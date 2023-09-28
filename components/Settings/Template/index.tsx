@@ -33,10 +33,7 @@ function Index() {
     variables: {},
     onCompleted: ({ template_ads }) => {
       setTemplateAds(
-        template_ads.map((t: TemplateAds) => ({
-          label: `${t.name} - ${t.type}`,
-          value: t.id
-        }))
+        template_ads
       );
     },
     onError: (error) => {
@@ -84,6 +81,7 @@ function Index() {
           templateAds={templateAds}
           currentTemplate={currentTemplate}
           setCurrentTemplate={setCurrentTemplate}
+          fetchTemplateAdsItems={fetchTemplateAdsItems}
         />
         {currentTemplate && (
           <CSV

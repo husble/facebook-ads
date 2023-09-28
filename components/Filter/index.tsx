@@ -76,10 +76,17 @@ const App = ({
           onChange={onChange}
           onSearch={onSearch}
           filterOption={filterOption}
-          options={productTypes.map((p: any) => ({
-            value: p.title,
-            label: p.title
-          }))}
+          options={productTypes.map((p: any) => {
+            if (!p.title) return {
+              value: "",
+              label: "All"
+            }
+
+            return {
+              value: p.title,
+              label: p.title
+            }
+          })}
         />
 
         <RangePicker showTime onChange={handleTime} />
