@@ -14,7 +14,7 @@ import Step2 from '#/components/Step2';
 import withAuth from '#/ultils/withAuth';
 import ModalImage from '#/components/ShowImage';
 import Filter from '#/components/Filter';
-import { UserContext } from '#/components/UserContext'; 
+import { UserContext } from '#/components/UserContext';
 
 const LIMIT = 25;
 
@@ -66,7 +66,7 @@ function Home() {
   const [paramsCreatedAt, setParamsCreatedAt] = useState<
     Record<string, string>
   >({ _lte: '', _gte: '' });
-  const {user} = useContext(UserContext)
+  const { user } = useContext(UserContext);
   const storeRef = useRef(200);
   const queries = useRef({
     where: {
@@ -88,7 +88,11 @@ function Home() {
     variables: {
       ...queries.current
     },
-    onCompleted: ({ product_ads, product_ads_aggregate, product_types }: any) => {
+    onCompleted: ({
+      product_ads,
+      product_ads_aggregate,
+      product_types
+    }: any) => {
       setAds(product_ads);
       setTotal(product_ads_aggregate.aggregate.count);
       setLoading(false);

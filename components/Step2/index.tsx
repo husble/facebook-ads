@@ -9,6 +9,7 @@ import { useLazyQuery, useQuery } from '@apollo/client';
 import { GET_TEMPLATE_ADS, GET_TEMPLATE_ITEMS } from '#/graphql/query';
 import moment from 'moment';
 import axios from 'axios';
+import FB from '#/app/api/fb';
 
 type Tag = {
   id: number;
@@ -81,13 +82,22 @@ function Index({ open, setOpen, ads }: any) {
         const nameTemplate = getNameTemplateAds(name_ads_account);
         const date = `${new Date().getDate()}`.slice(-2);
         const month = `${new Date().getMonth() + 1}`.slice(-2);
-        let new_name_ads_account = name_ads_account.replace('*', `${date}-${month}`);
-        if (templateType === "image") {
-          new_name_ads_account = new_name_ads_account.replace(/G00|G02/gi, "G01")
+        let new_name_ads_account = name_ads_account.replace(
+          '*',
+          `${date}-${month}`
+        );
+        if (templateType === 'image') {
+          new_name_ads_account = new_name_ads_account.replace(
+            /G00|G02/gi,
+            'G01'
+          );
         }
 
-        if (templateType === "video") {
-          new_name_ads_account = new_name_ads_account.replace(/G00|G01/gi, "G02")
+        if (templateType === 'video') {
+          new_name_ads_account = new_name_ads_account.replace(
+            /G00|G01/gi,
+            'G02'
+          );
         }
         const {
           data: { template_ads }
@@ -367,8 +377,7 @@ function Index({ open, setOpen, ads }: any) {
     const result = dataExports.map((d: any) => ({
       ['Ad Name']: d.template_user,
       ['Ad Status']: d.ad_status,
-      ['Additional Custom Tracking Specs']:
-        d.additional_custom_tracking_specs,
+      ['Additional Custom Tracking Specs']: d.additional_custom_tracking_specs,
       ['Body']: d.body,
       ['Call to Action']: d.call_to_action,
       ['Conversion Tracking Pixels']: d.conversion_tracking_pixels,
@@ -421,7 +430,7 @@ function Index({ open, setOpen, ads }: any) {
       ['Campaign Start Time']: time_start,
       ['Campaign Status']: d.campaign_status,
       ['New Objective']: d.new_objective,
-      ['Ad Account Id']: `act_${d.template_account}`,
+      ['Ad Account Id']: `act_${d.template_account}`
     }));
 
     const removeKeyFromObject = (obj: any, type: string) => {
@@ -442,18 +451,17 @@ function Index({ open, setOpen, ads }: any) {
       removeKeyFromObject(obj, templateType)
     );
 
-    return dataTemplates
-  }
+    return dataTemplates;
+  };
 
   const handleExportCamp = async () => {
     try {
       setLoading(true);
-      
 
       const fileType =
         'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet;charset=UTF-8';
       const fileExtension = '.csv';
-      const dataTemplates = await getDataCamps()
+      const dataTemplates = await getDataCamps();
       const uuid = Math.random();
       const ws = XLSX.utils.json_to_sheet(dataTemplates);
       const wb = { Sheets: { data: ws }, SheetNames: ['data'] };
@@ -471,20 +479,20 @@ function Index({ open, setOpen, ads }: any) {
 
   const handleChangeTemplateType = (value: string) => {
     const newDatas = adsPreview.map((ad: Product) => {
-      const {name_ads_account} = ad
-      let new_name_ads_account = name_ads_account
-      if (value === "image") {
-        new_name_ads_account = new_name_ads_account.replace(/G00|G02/gi, "G01")
+      const { name_ads_account } = ad;
+      let new_name_ads_account = name_ads_account;
+      if (value === 'image') {
+        new_name_ads_account = new_name_ads_account.replace(/G00|G02/gi, 'G01');
       }
 
-      if (value === "video") {
-        new_name_ads_account = new_name_ads_account.replace(/G00|G01/gi, "G02")
+      if (value === 'video') {
+        new_name_ads_account = new_name_ads_account.replace(/G00|G01/gi, 'G02');
       }
       return {
         ...ad,
         name_ads_account: new_name_ads_account,
         template_type: value
-      }
+      };
     });
 
     setProductType(value);
@@ -494,18 +502,14 @@ function Index({ open, setOpen, ads }: any) {
   const handleCreateCamp = async () => {
     try {
       setLoading(true);
-      const dataTemplates = await getDataCamps()
-      await axios({
-        method: "POST",
-        url: `https://ecuador-flash-locale-qt.trycloudflare.com/facebook/martketing`,
-        data: dataTemplates
-      })
-      console.log(dataTemplates)
-      setLoading(false)
+      const dataTemplates = await getDataCamps();
+      await FB.createCamp(dataTemplates);
+      console.log(dataTemplates);
+      setLoading(false);
     } catch (error) {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   return (
     <Drawer
@@ -527,7 +531,7 @@ function Index({ open, setOpen, ads }: any) {
           <Button onClick={handleExportCamp} type="primary">
             Export CSV
           </Button>
-          <Button className='ml-2' onClick={handleCreateCamp} type="primary">
+          <Button className="ml-2" onClick={handleCreateCamp} type="primary">
             Create Campaigns
           </Button>
         </div>

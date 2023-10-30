@@ -1,12 +1,10 @@
-"use client"
+'use client';
 
 import React, { useState } from 'react';
-import { UserOutlined, LockOutlined } from '@ant-design/icons';
 import Cookies from 'js-cookie';
 
 import Auth from '#/app/api/auth';
-import { Button, message } from 'antd';
-import { redirect } from 'next/navigation';
+import { Button } from 'antd';
 import Image from 'next/image';
 
 export default function Index() {
@@ -19,27 +17,36 @@ export default function Index() {
 
     Auth.userLogin({
       email: event.target.email.value,
-      password: event.target.password.value,
+      password: event.target.password.value
     })
-    .then(({ data }: any) => {
-      const { token, username } = data;
-      Cookies.set('token', token, { expires: 365 });
-      window.location.href = "/"
-    })
-    .catch((error: any) => {
-      setError(error?.data?.message);
-      setLoading(false);
-    });
+      .then(({ data }: any) => {
+        const { token, username } = data;
+        Cookies.set('token', token, { expires: 365 });
+        window.location.href = '/';
+      })
+      .catch((error: any) => {
+        setError(error?.data?.message);
+        setLoading(false);
+      });
   };
+
   return (
     <div className="login__page">
       <div className="w-screen h-screen flex items-center justify-center">
         <div className="flex items-center justify-center flex-col max-w-[400px] w-[400px]">
           <div className="flex justify-center">
-            <Image height={250} width={250} src="https://cdn.husble.com/logo.svg" alt="image" className="inline-block" />
+            <Image
+              height={250}
+              width={250}
+              src="https://cdn.husble.com/logo.svg"
+              alt="image"
+              className="inline-block"
+            />
           </div>
           <div className="mt-4 w-full">
-            <div className="text-center font-bold mb-4">Login to your account</div>
+            <div className="text-center font-bold mb-4">
+              Login to your account
+            </div>
             <div className="login-form">
               <form onSubmit={login}>
                 <div className="form-row">
@@ -96,6 +103,6 @@ export default function Index() {
           </div>
         </div>
       </div>
-  </div>
+    </div>
   );
 }
