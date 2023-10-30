@@ -8,6 +8,7 @@ import { template_ads } from '#/ultils/config';
 import { useLazyQuery, useQuery } from '@apollo/client';
 import { GET_TEMPLATE_ADS, GET_TEMPLATE_ITEMS } from '#/graphql/query';
 import moment from 'moment';
+import axios from 'axios';
 
 type Tag = {
   id: number;
@@ -319,131 +320,140 @@ function Index({ open, setOpen, ads }: any) {
     }
   ];
 
-  const handleExportCamp = async () => {
-    try {
-      setLoading(true);
-      let dataExports: any = [];
+  const getDataCamps = async () => {
+    let dataExports: any = [];
 
-      for await (const ad of adsPreview) {
-        const {
-          template_type,
-          template_name,
-          name_ads_account,
-          template_user,
-          image_video,
-          link,
-          link_object_id
-        } = ad;
-        const {
-          data: { template_ads_item }
-        } = await getTemplateItems({
-          variables: {
-            where: {
-              template_ads: {
-                name: {
-                  _eq: template_name
-                },
-                type: {
-                  _eq: template_type
-                }
+    for await (const ad of adsPreview) {
+      const {
+        template_type,
+        template_name,
+        name_ads_account,
+        template_user,
+        image_video,
+        link,
+        link_object_id,
+        template_account
+      } = ad;
+      const {
+        data: { template_ads_item }
+      } = await getTemplateItems({
+        variables: {
+          where: {
+            template_ads: {
+              name: {
+                _eq: template_name
+              },
+              type: {
+                _eq: template_type
               }
             }
           }
-        });
-        const mapDatas = template_ads_item.map((ad_item: any) => ({
-          ...ad_item,
-          name_ads_account,
-          template_user,
-          image_video,
-          link,
-          link_object_id
-        }));
-        dataExports = dataExports.concat(mapDatas);
-      }
-      const LabelImageVideo =
-        templateType === 'image' ? 'Image Hash' : 'Video ID';
-      const time_start = `${moment().format('MM/DD/YYYY')} 00:00`;
-      const result = dataExports.map((d: any) => ({
-        ['Ad Name']: d.template_user,
-        ['Ad Status']: d.ad_status,
-        ['Additional Custom Tracking Specs']:
-          d.additional_custom_tracking_specs,
-        ['Body']: d.body,
-        ['Call to Action']: d.call_to_action,
-        ['Conversion Tracking Pixels']: d.conversion_tracking_pixels,
-        ['Creative Type']: d.creative_type,
-        ['Image File Name']: d.image_file_name,
-        ['Image Hash']: templateType === 'image' ? d.image_video : d.image_hash,
-        ['Instagram Account ID']: d.instagram_account_id,
-        ['Instagram Preview Link']: d.instagram_preview_link,
-        ['Link']: d.link,
-        ['Link Description']: d.link_description,
-        ['Link Object ID']: d.link_object_id,
-        ['Optimize text per person']: d.optimize_text_per_person,
-        ['Optimized Ad Creative']: d.optimized_ad_creative,
-        ['Permalink']: d.permalink,
-        ['Preview Link']: d.preview_link,
-        ['URL Tags']: `${d.url_tags}${d.template_user}`,
-        ['Use Page as Actor']: d.use_page_as_actor,
-        ['Video File Name']: d.video_file_name,
-        ['Video ID']: templateType === 'video' ? d.image_video : d.video_id,
-        ['Video Retargeting']: d.video_retargeting,
-        ['Ad Set Bid Strategy']: d.ad_set_bid_strategy,
-        ['Ad Set Daily Budget']: d.ad_set_daily_budget,
-        ['Ad Set Lifetime Budget']: d.ad_set_lifetime_budget,
-        ['Ad Set Lifetime Impressions']: d.ad_set_lifetime_impressions,
-        ['Ad Set Name']: d.ad_set_name,
-        ['Ad Set Run Status']: d.ad_set_run_status,
-        ['Ad Set Time Start']: time_start,
-        ['Age Max']: d.age_max,
-        ['Age Min']: d.age_min,
-        ['Attribution Spec']: d.attribution_spec,
-        ['Billing Event']: d.billing_event,
-        ['Countries']: d.countries,
-        ['Destination Type']: d.destination_type,
-        ['Device Platforms']: d.device_platforms,
-        ['Facebook Positions']: d.facebook_positions,
-        ['Flexible Inclusions']: d.flexible_inclusions,
-        ['Gender']: d.gender,
-        ['Instagram Positions']: d.instagram_positions,
-        ['Location Types']: d.location_types,
-        ['Messenger Positions']: d.messenger_positions,
-        ['Optimization Goal']: d.optimization_goal,
-        ['Optimized Conversion Tracking Pixels']:
-          d.optimized_conversion_tracking_pixels,
-        ['Optimized Event']: d.optimized_event,
-        ['Publisher Platforms']: d.publisher_platforms,
-        ['Use Accelerated Delivery']: d.use_accelerated_delivery,
-        ['Buying Type']: d.buying_type,
-        ['Campaign Name']: d.name_ads_account,
-        ['Campaign Objective']: d.campaign_objective,
-        ['Campaign Start Time']: time_start,
-        ['Campaign Status']: d.campaign_status,
-        ['New Objective']: d.new_objective
-      }));
-
-      const removeKeyFromObject = (obj: any, type: string) => {
-        if (type === 'image') {
-          const {
-            'Video File Name': videoFileName,
-            'Video ID': videoId,
-            ...rest
-          } = obj;
-          return { ...rest };
-        } else {
-          const { 'Link Description': linkDescription, ...rest } = obj;
-          return { ...rest };
         }
-      };
+      });
+      const mapDatas = template_ads_item.map((ad_item: any) => ({
+        ...ad_item,
+        name_ads_account,
+        template_account,
+        template_user,
+        image_video,
+        link,
+        link_object_id
+      }));
+      dataExports = dataExports.concat(mapDatas);
+    }
+    const LabelImageVideo =
+      templateType === 'image' ? 'Image Hash' : 'Video ID';
+    const time_start = `${moment().format('MM/DD/YYYY')} 00:00`;
+    const result = dataExports.map((d: any) => ({
+      ['Ad Name']: d.template_user,
+      ['Ad Status']: d.ad_status,
+      ['Additional Custom Tracking Specs']:
+        d.additional_custom_tracking_specs,
+      ['Body']: d.body,
+      ['Call to Action']: d.call_to_action,
+      ['Conversion Tracking Pixels']: d.conversion_tracking_pixels,
+      ['Creative Type']: d.creative_type,
+      ['Image File Name']: d.image_file_name,
+      ['Image Hash']: templateType === 'image' ? d.image_video : d.image_hash,
+      ['Instagram Account ID']: d.instagram_account_id,
+      ['Instagram Preview Link']: d.instagram_preview_link,
+      ['Link']: d.link,
+      ['Link Description']: d.link_description,
+      ['Link Object ID']: d.link_object_id,
+      ['Optimize text per person']: d.optimize_text_per_person,
+      ['Optimized Ad Creative']: d.optimized_ad_creative,
+      ['Permalink']: d.permalink,
+      ['Preview Link']: d.preview_link,
+      ['URL Tags']: `${d.url_tags}${d.template_user}`,
+      ['Use Page as Actor']: d.use_page_as_actor,
+      ['Video File Name']: d.video_file_name,
+      ['Video ID']: templateType === 'video' ? d.image_video : d.video_id,
+      ['Video Retargeting']: d.video_retargeting,
+      ['Ad Set Bid Strategy']: d.ad_set_bid_strategy,
+      ['Ad Set Daily Budget']: d.ad_set_daily_budget,
+      ['Ad Set Lifetime Budget']: d.ad_set_lifetime_budget,
+      ['Ad Set Lifetime Impressions']: d.ad_set_lifetime_impressions,
+      ['Ad Set Name']: d.ad_set_name,
+      ['Ad Set Run Status']: d.ad_set_run_status,
+      ['Ad Set Time Start']: time_start,
+      ['Age Max']: d.age_max,
+      ['Age Min']: d.age_min,
+      ['Attribution Spec']: d.attribution_spec,
+      ['Billing Event']: d.billing_event,
+      ['Countries']: d.countries,
+      ['Destination Type']: d.destination_type,
+      ['Device Platforms']: d.device_platforms,
+      ['Facebook Positions']: d.facebook_positions,
+      ['Flexible Inclusions']: d.flexible_inclusions,
+      ['Gender']: d.gender,
+      ['Instagram Positions']: d.instagram_positions,
+      ['Location Types']: d.location_types,
+      ['Messenger Positions']: d.messenger_positions,
+      ['Optimization Goal']: d.optimization_goal,
+      ['Optimized Conversion Tracking Pixels']:
+        d.optimized_conversion_tracking_pixels,
+      ['Optimized Event']: d.optimized_event,
+      ['Publisher Platforms']: d.publisher_platforms,
+      ['Use Accelerated Delivery']: d.use_accelerated_delivery,
+      ['Buying Type']: d.buying_type,
+      ['Campaign Name']: d.name_ads_account,
+      ['Campaign Objective']: d.campaign_objective,
+      ['Campaign Start Time']: time_start,
+      ['Campaign Status']: d.campaign_status,
+      ['New Objective']: d.new_objective,
+      ['Ad Account Id']: `act_${d.template_account}`,
+    }));
 
-      const dataTemplates = result.map((obj: any) =>
-        removeKeyFromObject(obj, templateType)
-      );
+    const removeKeyFromObject = (obj: any, type: string) => {
+      if (type === 'image') {
+        const {
+          'Video File Name': videoFileName,
+          'Video ID': videoId,
+          ...rest
+        } = obj;
+        return { ...rest };
+      } else {
+        const { 'Link Description': linkDescription, ...rest } = obj;
+        return { ...rest };
+      }
+    };
+
+    const dataTemplates = result.map((obj: any) =>
+      removeKeyFromObject(obj, templateType)
+    );
+
+    return dataTemplates
+  }
+
+  const handleExportCamp = async () => {
+    try {
+      setLoading(true);
+      
 
       const fileType =
         'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet;charset=UTF-8';
       const fileExtension = '.csv';
-
+      const dataTemplates = await getDataCamps()
       const uuid = Math.random();
       const ws = XLSX.utils.json_to_sheet(dataTemplates);
       const wb = { Sheets: { data: ws }, SheetNames: ['data'] };
@@ -481,6 +491,22 @@ function Index({ open, setOpen, ads }: any) {
     setAdsPreview(newDatas);
   };
 
+  const handleCreateCamp = async () => {
+    try {
+      setLoading(true);
+      const dataTemplates = await getDataCamps()
+      await axios({
+        method: "POST",
+        url: `https://ecuador-flash-locale-qt.trycloudflare.com/facebook/martketing`,
+        data: dataTemplates
+      })
+      console.log(dataTemplates)
+      setLoading(false)
+    } catch (error) {
+      setLoading(false)
+    }
+  }
+
   return (
     <Drawer
       open={open}
@@ -497,9 +523,14 @@ function Index({ open, setOpen, ads }: any) {
           ]}
           onChange={handleChangeTemplateType}
         />
-        <Button onClick={handleExportCamp} type="primary">
-          Export CSV
-        </Button>
+        <div>
+          <Button onClick={handleExportCamp} type="primary">
+            Export CSV
+          </Button>
+          <Button className='ml-2' onClick={handleCreateCamp} type="primary">
+            Create Campaigns
+          </Button>
+        </div>
       </div>
       <Table
         loading={loading}

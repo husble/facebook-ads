@@ -2,10 +2,11 @@
 
 import { useQuery } from '@apollo/client';
 import { Button, Input, Select, Table, Tag } from 'antd';
-import { ChangeEvent, Key, useRef, useState } from 'react';
+import { ChangeEvent, Key, useContext, useRef, useState } from 'react';
 import Image from 'next/image';
 import debounce from 'lodash.debounce';
 import { FilterOutlined } from '@ant-design/icons';
+import moment from 'moment';
 
 import { GET_PRODUCT_ADS, GET_STORES } from '#/graphql/query';
 import Settings from '#/components/Settings';
@@ -13,7 +14,7 @@ import Step2 from '#/components/Step2';
 import withAuth from '#/ultils/withAuth';
 import ModalImage from '#/components/ShowImage';
 import Filter from '#/components/Filter';
-import moment from 'moment';
+import { UserContext } from '#/components/UserContext'; 
 
 const LIMIT = 25;
 
@@ -65,7 +66,7 @@ function Home() {
   const [paramsCreatedAt, setParamsCreatedAt] = useState<
     Record<string, string>
   >({ _lte: '', _gte: '' });
-
+  const {user} = useContext(UserContext)
   const storeRef = useRef(200);
   const queries = useRef({
     where: {
@@ -78,7 +79,7 @@ function Home() {
   });
 
   useQuery(GET_STORES, {
-    onCompleted: ({ store_2 }) => {
+    onCompleted: ({ store_2 }: any) => {
       setStores(store_2);
     }
   });
@@ -87,7 +88,7 @@ function Home() {
     variables: {
       ...queries.current
     },
-    onCompleted: ({ product_ads, product_ads_aggregate, product_types }) => {
+    onCompleted: ({ product_ads, product_ads_aggregate, product_types }: any) => {
       setAds(product_ads);
       setTotal(product_ads_aggregate.aggregate.count);
       setLoading(false);

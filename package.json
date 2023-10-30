@@ -10,7 +10,6 @@
   },
   "dependencies": {
     "@ant-design/icons": "^5.2.6",
-    "@apollo/client": "^3.8.3",
     "@types/node": "20.6.0",
     "@types/react": "18.2.21",
     "@types/react-dom": "18.2.7",
@@ -23,6 +22,7 @@
     "file-saver": "^2.0.5",
     "graphql": "^16.8.0",
     "js-cookie": "^3.0.5",
+    "jsonwebtoken": "8.5.1",
     "jwt-decode": "^3.1.2",
     "lodash.debounce": "^4.0.8",
     "lodash.uniq": "^4.5.0",
@@ -37,8 +37,10 @@
     "xlsx": "^0.18.5"
   },
   "devDependencies": {
+    "@apollo/client": "^3.8.5",
     "@types/file-saver": "^2.0.5",
     "@types/js-cookie": "^3.0.4",
+    "@types/jsonwebtoken": "8.5.1",
     "@types/lodash.debounce": "^4.0.7",
     "@types/lodash.uniq": "^4.5.7"
   }
