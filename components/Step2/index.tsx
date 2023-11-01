@@ -541,8 +541,10 @@ function Index({ open, setOpen, ads }: any) {
       await FB.createCamp(dataTemplates);
       console.log(dataTemplates);
       setLoading(false);
+      message.success('Create Campaigns successfull !!!');
     } catch (error) {
       setLoading(false);
+      message.error('Create Campaigns failed !!!');
     }
   };
 
