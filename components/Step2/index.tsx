@@ -36,6 +36,7 @@ type Product = {
   image_video?: string;
   created_at_string: string;
   link_object_id?: string;
+  story_id: string;
 };
 
 function Index({ open, setOpen, ads }: any) {
@@ -216,6 +217,24 @@ function Index({ open, setOpen, ads }: any) {
     200
   );
 
+  const handleChangeStoryId = debounce(
+    (e: ChangeEvent<HTMLInputElement>, row: Product) => {
+      const { value } = e.target;
+
+      const currentDatas: Product[] = [...adsPreview];
+      const findIndex = currentDatas.findIndex(
+        (data: Product) => data.key === row.key
+      );
+
+      currentDatas[findIndex] = {
+        ...currentDatas[findIndex],
+        story_id: value
+      };
+      setAdsPreview(currentDatas);
+    },
+    200
+  );
+
   const handleChangeLinkObject = debounce(
     (e: ChangeEvent<HTMLInputElement>, row: Product) => {
       const { value } = e.target;
@@ -327,6 +346,19 @@ function Index({ open, setOpen, ads }: any) {
           placeholder="Phu"
         />
       )
+    },
+    {
+      title: 'Story ID',
+      key: 'story_id',
+      dataIndex: 'story_id',
+      width: 200,
+      render: (template_account: any, row: any) => (
+        <Input
+          defaultValue={template_account}
+          onChange={(e) => handleChangeStoryId(e, row)}
+          placeholder="story_id"
+        />
+      )
     }
   ];
 
@@ -342,7 +374,8 @@ function Index({ open, setOpen, ads }: any) {
         image_video,
         link,
         link_object_id,
-        template_account
+        template_account,
+        story_id
       } = ad;
       const {
         data: { template_ads_item }
@@ -367,7 +400,8 @@ function Index({ open, setOpen, ads }: any) {
         template_user,
         image_video,
         link,
-        link_object_id
+        link_object_id,
+        story_id
       }));
       dataExports = dataExports.concat(mapDatas);
     }
@@ -384,6 +418,7 @@ function Index({ open, setOpen, ads }: any) {
       ['Creative Type']: d.creative_type,
       ['Image File Name']: d.image_file_name,
       ['Image Hash']: templateType === 'image' ? d.image_video : d.image_hash,
+      ['Story ID']: d.story_id,
       ['Instagram Account ID']: d.instagram_account_id,
       ['Instagram Preview Link']: d.instagram_preview_link,
       ['Link']: d.link,
