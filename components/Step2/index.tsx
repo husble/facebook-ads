@@ -418,7 +418,7 @@ function Index({ open, setOpen, ads }: any) {
       ['Creative Type']: d.creative_type,
       ['Image File Name']: d.image_file_name,
       ['Image Hash']: templateType === 'image' ? d.image_video : d.image_hash,
-      ['Story ID']: d.story_id,
+      ['Story ID']: d.story_id || '',
       ['Instagram Account ID']: d.instagram_account_id,
       ['Instagram Preview Link']: d.instagram_preview_link,
       ['Link']: d.link,
