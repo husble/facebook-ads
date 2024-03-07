@@ -11,4 +11,15 @@ export default class FB {
       data: body
     });
   }
+
+  static createPost(body: any) {
+    return axios({
+      method: 'POST',
+      url: `${process.env.FACEBOOK_API}/facebook/create_post`,
+      headers: {
+        ['x-hasura-admin-secret']: process.env.PASS_HASURA
+      },
+      data: body
+    });
+  }
 }

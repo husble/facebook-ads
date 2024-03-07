@@ -23,11 +23,15 @@ export const GET_PRODUCT_ADS = gql`
       name_ads_account
       image_url
       product_type
+      product_id
       link
       pr
       tags
       key: id
       created_at_string
+      store_2 {
+        shop
+      }
     }
     product_ads_aggregate(where: $where) {
       aggregate {
@@ -90,6 +94,9 @@ export const GET_TEMPLATE_ADS = gql`
       id
       name
       type
+      template_ads_items {
+        body
+      }
     }
   }
 `;

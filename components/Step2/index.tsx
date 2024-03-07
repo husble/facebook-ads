@@ -1,33 +1,40 @@
-import { Button, Drawer, Input, Select, Table, Tag, message } from 'antd';
+import { Button, Drawer, Input, Row, Select, Table, Tag, message } from 'antd';
 import React, { ChangeEvent, useEffect, useRef, useState } from 'react';
 import debounce from 'lodash.debounce';
 import * as XLSX from 'xlsx';
 import * as FileSaver from 'file-saver';
 
-import { template_ads } from '#/ultils/config';
+import { ACCOUNT_IDS, LINK_DATAS, PAGES, template_ads } from '#/ultils/config';
 import { useLazyQuery, useQuery } from '@apollo/client';
 import { GET_TEMPLATE_ADS, GET_TEMPLATE_ITEMS } from '#/graphql/query';
 import moment from 'moment';
-import axios from 'axios';
 import FB from '#/app/api/fb';
+import { ChromeOutlined } from '@ant-design/icons';
+
+import Styled from "./Style"
+import TextArea from 'antd/es/input/TextArea';
 
 type Tag = {
   id: number;
   title: String;
 };
 
+type Store = {
+  shop: string;
+}
+
 type Product = {
-  store_id: String;
-  product_id: String;
-  handle: String;
-  title: String;
+  store_id: string;
+  product_id: string;
+  handle: string;
+  title: string;
   name_ads_account: string;
-  vendor: String;
+  vendor: string;
   product_ads_tags: Tag[];
-  pr: String;
-  link: String;
-  product_type: String;
-  image_url: String;
+  pr: string;
+  link: string;
+  product_type: string;
+  image_url: string;
   key: number;
   template_name?: string;
   template_type?: string;
@@ -37,14 +44,26 @@ type Product = {
   created_at_string: string;
   link_object_id?: string;
   story_id: string;
+  store_2: Store;
+  post_id?: string;
+  body: string;
+  customize_link?: string;
+  video_url?: string;
 };
+
+const {Option} = Select
 
 function Index({ open, setOpen, ads }: any) {
   const [adsPreview, setAdsPreview] = useState<Product[]>([]);
   const [loading, setLoading] = useState<boolean>(false);
+  const [isCreatePost, setIsCreatePost] = useState<Boolean>(false)
+  const [isCreateCamp, setIsCreateCamp] = useState<Boolean>(false)
   const [templateType, setProductType] = useState<string>('image');
   const [getTemplateAds] = useLazyQuery(GET_TEMPLATE_ADS);
   const [getTemplateItems] = useLazyQuery(GET_TEMPLATE_ITEMS);
+  const account = useRef<string>("")
+  const page = useRef<string>("")
+  const name_user = useRef<string>("")
   const templateAds = useRef([]);
 
   useQuery(GET_TEMPLATE_ADS, {
@@ -100,6 +119,16 @@ function Index({ open, setOpen, ads }: any) {
             'G02'
           );
         }
+
+        if (account.current) {
+          const [name] = account.current.split("=")
+          new_name_ads_account = new_name_ads_account.replace("***", name)
+        }
+
+        if (name_user.current) {
+          new_name_ads_account = new_name_ads_account.replace("**", name_user.current)
+        }
+
         const {
           data: { template_ads }
         } = await getTemplateAds({
@@ -116,11 +145,15 @@ function Index({ open, setOpen, ads }: any) {
         });
 
         const template = template_ads[0];
+
         results.push({
           ...ad,
           name_ads_account: new_name_ads_account,
           template_name: template.name,
-          template_type: template.type
+          template_account: account.current?.split("=")[0],
+          template_type: template.type,
+          template_user: name_user.current,
+          body: `${template.template_ads_items[0].body} \n Customize yours: https://${ad.store_2.shop.replace(".myshopify", "")}/${LINK_DATAS[ad.store_2.shop].slice(0, 3)}-${ad.product_id}` || ""
         });
       }
 
@@ -128,8 +161,40 @@ function Index({ open, setOpen, ads }: any) {
       setLoading(false);
     }
 
+    if (!open) return
+
+    setIsCreateCamp(false)
     mappingData();
-  }, [ads]);
+  }, [ads, open]);
+
+  const checkFulFillDataCreatePost = (): Boolean => {
+    if (account.current && account.current !== "***" && page.current && name_user.current && name_user.current !== "**") {
+      setIsCreatePost(true)
+      return true
+    }
+
+    setIsCreatePost(false)
+
+    return false
+  }
+
+  const checkFulFillDataCreateCamp = (ads: Product[]) => {
+    if (!checkFulFillDataCreatePost()) {
+      setIsCreateCamp(false)
+
+      return
+    }
+
+    for (const ad of ads) {
+      if (!ad["post_id"]) {
+        setIsCreateCamp(false)
+
+        return
+      }
+    }
+
+    setIsCreateCamp(true)
+  }
 
   const handleSelectTypeOfTemplate = (value: any, row: Product) => {
     const { key } = row;
@@ -147,118 +212,80 @@ function Index({ open, setOpen, ads }: any) {
   };
 
   const handleChangeUser = debounce(
-    (e: ChangeEvent<HTMLInputElement>, row: any) => {
+    (e: ChangeEvent<HTMLInputElement>) => {
       const { value } = e.target;
+      name_user.current = value
       const valueReplace = value || '**';
-
-      const { key, name_ads_account, template_user } = row;
-      const dataWantToReplace = template_user || '**';
-      const addUser = name_ads_account.replace(
-        `-${dataWantToReplace}-`,
-        `-${valueReplace}-`
-      );
-
       const currentDatas: any = [...adsPreview];
-      const findIndex = currentDatas.findIndex(
-        (data: Product) => data.key === key
-      );
-
-      currentDatas[findIndex] = {
-        ...currentDatas[findIndex],
-        template_user: valueReplace,
-        name_ads_account: addUser
-      };
+      for (const ad of adsPreview) {
+        const { key, name_ads_account, template_user } = ad;
+        const dataWantToReplace = template_user || '**';
+        const addUser = name_ads_account.replace(
+          `-${dataWantToReplace}-`,
+          `-${valueReplace}-`
+        );
+  
+        const findIndex = currentDatas.findIndex(
+          (data: Product) => data.key === key
+        );
+  
+        currentDatas[findIndex] = {
+          ...currentDatas[findIndex],
+          template_user: valueReplace,
+          name_ads_account: addUser
+        };
+      }
+      checkFulFillDataCreateCamp(currentDatas)
       setAdsPreview(currentDatas);
     },
     200
   );
 
-  const handleChangeAccount = debounce(
-    (e: ChangeEvent<HTMLInputElement>, row: any) => {
-      const { value } = e.target;
-      const valueReplace = value || '***';
-      const { key, name_ads_account, template_account } = row;
-      const dataWantToReplace = template_account || '***';
-      const addAccount = name_ads_account.replace(
-        `-${dataWantToReplace}-`,
-        `-${valueReplace}-`
-      );
+  const handleChangePostId = debounce((e: ChangeEvent<HTMLInputElement>, record: Product) => {
+    const {key} = record;
+    const {value} = e.target
+    const currentDatas: any = [...adsPreview];
+    const findIndex = currentDatas.findIndex(
+      (data: Product) => data.key === key
+    );
 
-      const currentDatas: any = [...adsPreview];
-      const findIndex = currentDatas.findIndex(
-        (data: Product) => data.key === key
-      );
+    currentDatas[findIndex] = {
+      ...currentDatas[findIndex],
+      post_id: value
+    };
 
-      currentDatas[findIndex] = {
-        ...currentDatas[findIndex],
-        template_account: valueReplace,
-        name_ads_account: addAccount
-      };
-      setAdsPreview(currentDatas);
-    },
-    200
-  );
+    checkFulFillDataCreateCamp(currentDatas)
+    setAdsPreview(currentDatas)
+  }, 500)
 
-  const handleChangeImageVIdeo = debounce(
-    (e: ChangeEvent<HTMLInputElement>, row: Product) => {
-      const { value } = e.target;
+  const gotoPost = (post_id: string) => {
+    if (templateType === "image") {
+      window.open(`https://www.facebook.com/${page.current}/posts/${post_id}` , "_blank")
+    } else {
+      window.open(`https://www.facebook.com/${post_id}` , "_blank")
+    }
+  }
 
-      const currentDatas: Product[] = [...adsPreview];
-      const findIndex = currentDatas.findIndex(
-        (data: Product) => data.key === row.key
-      );
+  const handleChangeAdAccount = debounce((e :ChangeEvent<HTMLTextAreaElement>, record: Product) => {
+    const { key } = record;
+    const currentDatas: any = [...adsPreview];
+    const findIndex = currentDatas.findIndex(
+      (data: Product) => data.key === key
+    );
 
-      currentDatas[findIndex] = {
-        ...currentDatas[findIndex],
-        image_video: value
-      };
-      setAdsPreview(currentDatas);
-    },
-    200
-  );
-
-  const handleChangeStoryId = debounce(
-    (e: ChangeEvent<HTMLInputElement>, row: Product) => {
-      const { value } = e.target;
-
-      const currentDatas: Product[] = [...adsPreview];
-      const findIndex = currentDatas.findIndex(
-        (data: Product) => data.key === row.key
-      );
-
-      currentDatas[findIndex] = {
-        ...currentDatas[findIndex],
-        story_id: value
-      };
-      setAdsPreview(currentDatas);
-    },
-    200
-  );
-
-  const handleChangeLinkObject = debounce(
-    (e: ChangeEvent<HTMLInputElement>, row: Product) => {
-      const { value } = e.target;
-
-      const currentDatas: Product[] = [...adsPreview];
-      const findIndex = currentDatas.findIndex(
-        (data: Product) => data.key === row.key
-      );
-
-      currentDatas[findIndex] = {
-        ...currentDatas[findIndex],
-        link_object_id: value
-      };
-      setAdsPreview(currentDatas);
-    },
-    200
-  );
+    currentDatas[findIndex] = {
+      ...currentDatas[findIndex],
+      name_ads_account: e.target.value
+    };
+    setAdsPreview(currentDatas);
+  }, 300)
 
   const columns = [
     {
       title: 'Title',
       key: 'title',
       dataIndex: 'title',
-      width: 200,
+      width: 300,
       render: (title: string, row: Product) => {
         return (
           <a target="_blank" href={`${row.link}`}>
@@ -271,100 +298,30 @@ function Index({ open, setOpen, ads }: any) {
       title: 'Camp Name',
       key: 'name_ads_account',
       dataIndex: 'name_ads_account',
-      width: 250
+      render: (name_ads_account: string, record: Product) => (
+        <TextArea onChange={(e) => handleChangeAdAccount(e, record)} key={name_ads_account} defaultValue={name_ads_account} />
+      )
     },
     {
-      title: 'Template Name',
-      key: 'template',
-      dataIndex: 'template',
-      width: 300,
-      render: (_: any, row: any) => {
+      title: 'Post Id',
+      key: 'post_id',
+      dataIndex: 'post_id',
+      render: (post_id: string, row: Product) => {
         return (
-          <div>
-            {/* <Tag color="blue">{row.template_name}</Tag> */}
-            <Select
-              onChange={(value) => handleSelectTypeOfTemplate(value, row)}
-              style={{ width: '200px' }}
-              defaultValue={row.template_name}
-              options={templateAds.current.map((template: any) => ({
-                label: template.name,
-                value: template.name
-              }))}
-            />
-          </div>
+          // post_id ? (
+            <div style={{display: 'flex', gap: 10}}>
+              <Input allowClear onChange={(e) => handleChangePostId(e, row)} key={post_id} defaultValue={post_id} />
+              {post_id ? <ChromeOutlined color='#1677ff' onClick={() => gotoPost(post_id)} /> : ""}
+            </div>
+          // ) : null
         );
-      }
-    },
-    {
-      title: 'Ad Name',
-      key: 'template_user',
-      dataIndex: 'template_user',
-      width: 200,
-      render: (template_user: any, row: any) => (
-        <Input
-          defaultValue={template_user}
-          onChange={(e) => handleChangeUser(e, row)}
-          placeholder="phu"
-        />
-      )
-    },
-    {
-      title: 'Ad Account',
-      key: 'template_account',
-      dataIndex: 'template_account',
-      width: 200,
-      render: (template_account: any, row: any) => (
-        <Input
-          defaultValue={template_account}
-          onChange={(e) => handleChangeAccount(e, row)}
-          placeholder="account123456"
-        />
-      )
-    },
-    {
-      title: 'Link Object ID',
-      key: 'link_object_id',
-      dataIndex: 'link_object_id',
-      width: 200,
-      render: (link_object_id: any, row: any) => (
-        <Input
-          defaultValue={link_object_id}
-          onChange={(e) => handleChangeLinkObject(e, row)}
-          placeholder="Link Object ID"
-        />
-      )
-    },
-    {
-      title: templateType === 'image' ? 'Image Hash' : 'Video ID',
-      key: 'image_video',
-      dataIndex: 'image_video',
-      width: 200,
-      render: (template_account: any, row: any) => (
-        <Input
-          defaultValue={template_account}
-          onChange={(e) => handleChangeImageVIdeo(e, row)}
-          placeholder="Phu"
-        />
-      )
-    },
-    {
-      title: 'Story ID',
-      key: 'story_id',
-      dataIndex: 'story_id',
-      width: 200,
-      render: (template_account: any, row: any) => (
-        <Input
-          defaultValue={template_account}
-          onChange={(e) => handleChangeStoryId(e, row)}
-          placeholder="story_id"
-        />
-      )
+      },
+      width: 200
     }
   ];
 
   const getDataCamps = async () => {
     let dataExports: any = [];
-
     for await (const ad of adsPreview) {
       const {
         template_type,
@@ -375,8 +332,14 @@ function Index({ open, setOpen, ads }: any) {
         link,
         link_object_id,
         template_account,
-        story_id
+        story_id,
+        image_url,
+        body,
+        customize_link,
+        video_url,
+        post_id
       } = ad;
+
       const {
         data: { template_ads_item }
       } = await getTemplateItems({
@@ -393,7 +356,7 @@ function Index({ open, setOpen, ads }: any) {
           }
         }
       });
-      const mapDatas = template_ads_item.map((ad_item: any) => ({
+      const mapDatas = template_ads_item.map((ad_item: Product) => ({
         ...ad_item,
         name_ads_account,
         template_account,
@@ -401,12 +364,16 @@ function Index({ open, setOpen, ads }: any) {
         image_video,
         link,
         link_object_id,
-        story_id
+        story_id,
+        image_url,
+        customize_link,
+        body,
+        video_url,
+        post_id
       }));
       dataExports = dataExports.concat(mapDatas);
     }
-    const LabelImageVideo =
-      templateType === 'image' ? 'Image Hash' : 'Video ID';
+
     const time_start = `${moment().format('MM/DD/YYYY')} 00:00`;
     const result = dataExports.map((d: any) => ({
       ['Ad Name']: d.template_user,
@@ -417,13 +384,12 @@ function Index({ open, setOpen, ads }: any) {
       ['Conversion Tracking Pixels']: d.conversion_tracking_pixels,
       ['Creative Type']: d.creative_type,
       ['Image File Name']: d.image_file_name,
-      ['Image Hash']: templateType === 'image' ? d.image_video : d.image_hash,
       ['Story ID']: d.story_id || '',
       ['Instagram Account ID']: d.instagram_account_id,
       ['Instagram Preview Link']: d.instagram_preview_link,
       ['Link']: d.link,
       ['Link Description']: d.link_description,
-      ['Link Object ID']: d.link_object_id,
+      ['Link Object ID']: page.current,
       ['Optimize text per person']: d.optimize_text_per_person,
       ['Optimized Ad Creative']: d.optimized_ad_creative,
       ['Permalink']: d.permalink,
@@ -465,7 +431,11 @@ function Index({ open, setOpen, ads }: any) {
       ['Campaign Start Time']: time_start,
       ['Campaign Status']: d.campaign_status,
       ['New Objective']: d.new_objective,
-      ['Ad Account Id']: `act_${d.template_account}`
+      ['Ad Account Id']: `act_${account.current.split("=")[1]}`,
+      ["Image Url"]: d.image_url,
+      ["Video Url"]: d.video_url,
+      ["Customize Link"]: d.customize_link,
+      ["Post Id"]: d.post_id
     }));
 
     const removeKeyFromObject = (obj: any, type: string) => {
@@ -534,12 +504,85 @@ function Index({ open, setOpen, ads }: any) {
     setAdsPreview(newDatas);
   };
 
+  const chooseAccount = (value: string) => {
+    const [name] = value.split("=")
+    account.current = value
+    const currentDatas: any = [...adsPreview];
+
+    for (const ad of adsPreview) {
+      const valueReplace = name || '***';
+      const { key, name_ads_account, template_account } = ad;
+      const dataWantToReplace = template_account || '***';
+      const addAccount = name_ads_account.replace(
+        `-${dataWantToReplace}-`,
+        `-${valueReplace}-`
+      );
+  
+      const findIndex = currentDatas.findIndex(
+        (data: Product) => data.key === key
+      );
+  
+      currentDatas[findIndex] = {
+        ...currentDatas[findIndex],
+        template_account: valueReplace,
+        name_ads_account: addAccount
+      };
+    }
+    checkFulFillDataCreateCamp(currentDatas)
+    setAdsPreview(currentDatas);
+  }
+
+  const choosePage = (value: string) => {
+    page.current = value
+    checkFulFillDataCreateCamp(adsPreview)
+  }
+
+  const handleCreatePosts = async () => {
+    try {
+      setLoading(true);
+      const dataTemplates = await getDataCamps();
+      const {data: {postIds}} = await FB.createPost({
+        templates: dataTemplates,
+        page_id: page.current,
+        type: templateType
+      });
+      let newAdsPreview = [...adsPreview]
+      if (templateType === "image") {
+        newAdsPreview = adsPreview.map((ad, index) => {
+          return {
+            ...ad,
+            post_id: postIds[index].post_id.split("_")[1]
+          }
+        })
+      } else {
+        newAdsPreview = adsPreview.map((ad, index) => {
+          return {
+            ...ad,
+            post_id: postIds[index].post_id
+          }
+        })
+      }
+
+      setIsCreateCamp(true)
+      setAdsPreview(newAdsPreview)
+      setLoading(false);
+      message.success('Create Campaigns successfull !!!');
+    } catch (error) {
+      console.log(error)
+      setIsCreateCamp(false)
+      setLoading(false);
+      message.error('Create Campaigns failed !!!');
+    }
+  }
+
   const handleCreateCamp = async () => {
     try {
       setLoading(true);
       const dataTemplates = await getDataCamps();
-      await FB.createCamp(dataTemplates);
-      console.log(dataTemplates);
+      await FB.createCamp({
+        templates: dataTemplates,
+        page_id: page.current
+      });
       setLoading(false);
       message.success('Create Campaigns successfull !!!');
     } catch (error) {
@@ -548,44 +591,149 @@ function Index({ open, setOpen, ads }: any) {
     }
   };
 
+  const handleChangeImageUrl = debounce((e: ChangeEvent<HTMLInputElement>, record: Product) => {
+    const { key } = record;
+    const currentDatas: any = [...adsPreview];
+    const findIndex = currentDatas.findIndex(
+      (data: Product) => data.key === key
+    );
+    if (templateType === "image") {
+      currentDatas[findIndex] = {
+        ...currentDatas[findIndex],
+        image_url: e.target.value
+      };
+    } else {
+      currentDatas[findIndex] = {
+        ...currentDatas[findIndex],
+        video_url: e.target.value
+      };
+    }
+
+    setAdsPreview(currentDatas);
+  }, 500)
+
+  const handleChangeMessage = debounce((e: ChangeEvent<HTMLTextAreaElement>, record: Product) => {
+    const { key } = record;
+    const currentDatas: any = [...adsPreview];
+    const findIndex = currentDatas.findIndex(
+      (data: Product) => data.key === key
+    );
+
+    currentDatas[findIndex] = {
+      ...currentDatas[findIndex],
+      body: e.target.value
+    };
+
+    setAdsPreview(currentDatas);
+  }, 500)
+
   return (
-    <Drawer
-      open={open}
-      onClose={() => setOpen(false)}
-      width="90vw"
-      placement="left"
-    >
-      <div className="flex justify-between">
-        <Select
-          defaultValue="image"
-          options={[
-            { label: 'Image', value: 'image' },
-            { label: 'Video', value: 'video' }
-          ]}
-          onChange={handleChangeTemplateType}
-        />
-        <div>
-          <Button onClick={handleExportCamp} type="primary">
-            Export CSV
-          </Button>
-          <Button className="ml-2" onClick={handleCreateCamp} type="primary">
-            Create Campaigns
-          </Button>
+    <Styled>
+      <Drawer
+        open={open}
+        onClose={() => setOpen(false)}
+        width="90vw"
+        placement="left"
+        className='drawer_step2'
+      >
+        <div className="flex justify-between">
+          <div className='flex gap-2'>
+            <Select
+              defaultValue="image"
+              options={[
+                { label: 'Image', value: 'image' },
+                { label: 'Video', value: 'video' }
+              ]}
+              onChange={handleChangeTemplateType}
+            />
+            <Input
+              onChange={(e) => handleChangeUser(e)}
+              placeholder="phu"
+              style={{width: "150px"}}
+            />
+            <Select
+              style={{width: "200px"}}
+              placeholder="please choose account"
+              onChange={chooseAccount}
+            >
+              {ACCOUNT_IDS.map(act => (
+                <Option key={act.value} value={act.value}>{act.label}</Option>
+              ))}
+            </Select>
+            <Select
+              style={{width: "200px"}}
+              placeholder="please choose page"
+              onChange={choosePage}
+            >
+              {PAGES.map(page => (
+                <Option key={page.value} value={page.value}>{page.label}</Option>
+              ))}
+            </Select>
+          </div>
+          <div>
+            <Button className="btn__export--csv" onClick={handleExportCamp} type="primary">
+              Export CSV
+            </Button>
+            <Button disabled={!isCreatePost} className="btn__create--post" onClick={handleCreatePosts} type="primary">
+              Create Posts
+            </Button>
+            <Button disabled={!isCreateCamp} className="btn__create--camp ml-2" onClick={handleCreateCamp} type="primary">
+              Create Campaigns
+            </Button>
+          </div>
         </div>
-      </div>
-      <Table
-        loading={loading}
-        columns={columns}
-        dataSource={adsPreview}
-        scroll={{
-          x: 'calc(100vw - 100px)',
-          y: 'calc(100vh - 200px'
-        }}
-        pagination={{
-          pageSize: 50
-        }}
-      />
-    </Drawer>
+        <Table
+          loading={loading}
+          columns={columns}
+          dataSource={adsPreview}
+          scroll={{
+            y: 'calc(100vh - 200px)'
+          }}
+          pagination={{
+            pageSize: 50
+          }}
+          className='table_step2'
+          expandable={{
+            expandedRowRender: (record) => (
+              <ul className='camp_list_items'>
+                <li style={{width: "60%"}}>
+                  <span className='capm_item--label'>
+                    {templateType === "image" ? "Image" : "Video"} 
+                  </span>
+                  <Input
+                    onChange={(e) => handleChangeImageUrl(e, record)}
+                    style={{width: '60%'}}
+                    defaultValue={templateType === "image" ? record.image_url : record.video_url}
+                    key={templateType === "image" ? record.image_url : record.video_url}
+                  />
+                </li>
+                <li>
+                  <span className='capm_item--label'>Template Name</span>
+                  <Select
+                    onChange={(value) => handleSelectTypeOfTemplate(value, record)}
+                    style={{ width: '200px' }}
+                    defaultValue={record.template_name}
+                    options={templateAds.current.map((template: any) => ({
+                      label: template.name,
+                      value: template.name
+                    }))}
+                  />
+                </li>
+                <li style={{width: "100%"}}>
+                  <span className='capm_item--label'>Message</span>
+                  <TextArea
+                    onChange={(e) => handleChangeMessage(e, record)}
+                    rows={5} style={{width: "100%"}}
+                    defaultValue={record.body}
+                    key={record.body}
+                  />
+                </li>
+              </ul>
+            ),
+          }}
+        />
+      </Drawer>
+    </Styled>
   );
 }
 

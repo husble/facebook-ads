@@ -19,3 +19,36 @@
 body {
   color: rgb(var(--foreground-rgb));
 }
+
+.drawer_step2 :where(.css-dev-only-do-not-override-pr0fja).ant-table-wrapper .ant-table-tbody>tr>td {
+  padding: 4px;
+}
+
+.drawer_step2 .table_step2 .camp_list_items {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 20px;
+  padding: 0;
+}
+
+.drawer_step2 .table_step2 .camp_list_items li{
+  display: flex;
+  gap: 10px;
+  flex-direction: column;
+  align-items: flex-start;
+}
+
+.drawer_step2 .table_step2 .camp_list_items li .capm_item--label{
+  color: #000;
+  font-weight: 700;
+}
+
+.btn__create--post {
+  background-color: #ff8831 !important;
+  margin-left: 8px;
+}
+
+.btn__create--camp {
+  background-color: green !important;
+  color: #fff;
+}
