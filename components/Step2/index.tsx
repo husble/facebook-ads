@@ -196,16 +196,34 @@ function Index({ open, setOpen, ads }: any) {
     setIsCreateCamp(true)
   }
 
-  const handleSelectTypeOfTemplate = (value: any, row: Product) => {
+  const handleSelectTypeOfTemplate = async (value: any, row: Product) => {
     const { key } = row;
     const currentDatas: any = [...adsPreview];
     const findIndex = currentDatas.findIndex(
       (data: Product) => data.key === key
     );
 
+    const {
+      data: { template_ads }
+    } = await getTemplateAds({
+      variables: {
+        where: {
+          name: {
+            _eq: value
+          },
+          type: {
+            _eq: templateType
+          }
+        }
+      }
+    });
+
+    const template = template_ads[0] || {template_ads_items: [{body: ""}]};
+    const template_item = template.template_ads_items[0]
     currentDatas[findIndex] = {
       ...currentDatas[findIndex],
-      template_name: value
+      template_name: value,
+      body: `${template_item.body} \n Customize yours: https://${currentDatas[findIndex].store_2.shop.replace(".myshopify", "")}/${LINK_DATAS[currentDatas[findIndex].store_2.shop].slice(0, 3)}-${currentDatas[findIndex].product_id}` || ""
     };
 
     setAdsPreview(currentDatas);
@@ -610,7 +628,7 @@ function Index({ open, setOpen, ads }: any) {
     }
 
     setAdsPreview(currentDatas);
-  }, 500)
+  }, 1000)
 
   const handleChangeMessage = debounce((e: ChangeEvent<HTMLTextAreaElement>, record: Product) => {
     const { key } = record;
@@ -625,7 +643,7 @@ function Index({ open, setOpen, ads }: any) {
     };
 
     setAdsPreview(currentDatas);
-  }, 500)
+  }, 1000)
 
   return (
     <Styled>
@@ -636,7 +654,7 @@ function Index({ open, setOpen, ads }: any) {
         placement="left"
         className='drawer_step2'
       >
-        <div className="flex justify-between">
+        <div className="flex justify-between flex-wrap gap-2">
           <div className='flex gap-2'>
             <Select
               defaultValue="image"
@@ -647,6 +665,7 @@ function Index({ open, setOpen, ads }: any) {
               onChange={handleChangeTemplateType}
             />
             <Input
+              allowClear
               onChange={(e) => handleChangeUser(e)}
               placeholder="phu"
               style={{width: "150px"}}
