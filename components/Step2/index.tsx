@@ -153,7 +153,7 @@ function Index({ open, setOpen, ads }: any) {
           template_account: account.current?.split("=")[0],
           template_type: template.type,
           template_user: name_user.current,
-          body: `${template.template_ads_items[0].body} \n Customize yours: https://${ad.store_2.shop.replace(".myshopify", "")}/${LINK_DATAS[ad.store_2.shop].slice(0, 3)}-${ad.product_id}` || ""
+          body: `${template.template_ads_items[0].body} \nCustomize yours: https://${ad.store_2.shop.replace("blithehub.myshopify.com", "wrappiness.co").replace(".myshopify", "")}/${LINK_DATAS[ad.store_2.shop].slice(0, 3)}-${ad.product_id}` || ""
         });
       }
 
@@ -584,7 +584,7 @@ function Index({ open, setOpen, ads }: any) {
       setIsCreateCamp(true)
       setAdsPreview(newAdsPreview)
       setLoading(false);
-      message.success('Create Campaigns successfull !!!');
+      message.success('Create Posts successfull !!!');
     } catch (error) {
       console.log(error)
       setIsCreateCamp(false)
@@ -674,6 +674,7 @@ function Index({ open, setOpen, ads }: any) {
               style={{width: "200px"}}
               placeholder="please choose account"
               onChange={chooseAccount}
+              showSearch
             >
               {ACCOUNT_IDS.map(act => (
                 <Option key={act.value} value={act.value}>{act.label}</Option>

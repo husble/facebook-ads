@@ -5,7 +5,7 @@ export const template_ads = {
 
 export const LINK_DATAS: {[key: string]: string} = {
   "pawsionate.myshopify.com": "paw",
-  "blithehub.myshopify.com": "wg",
+  "blithehub.myshopify.com": "wr",
   "wrappiness.myshopify.com": "wra",
   "tescadeaux.myshopify.com": "tes"
 }
@@ -83,6 +83,10 @@ export const PAGES = [
   {
     label: "Because I Love You",
     value: "1613981485351806"
+  },
+  {
+    label: "Wrappiness Home Decor",
+    value: "127340257120100"
   },
   {
     label: "Xucana",
