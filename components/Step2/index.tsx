@@ -223,7 +223,7 @@ function Index({ open, setOpen, ads }: any) {
     currentDatas[findIndex] = {
       ...currentDatas[findIndex],
       template_name: value,
-      body: `${template_item.body} \n Customize yours: https://${currentDatas[findIndex].store_2.shop.replace(".myshopify", "")}/${LINK_DATAS[currentDatas[findIndex].store_2.shop].slice(0, 3)}-${currentDatas[findIndex].product_id}` || ""
+      body: `${template_item.body} \n Customize yours: https://${currentDatas[findIndex].store_2.shop.replace("blithehub.myshopify.com", "wrappiness.co").replace(".myshopify", "")}/${LINK_DATAS[currentDatas[findIndex].store_2.shop].slice(0, 3)}-${currentDatas[findIndex].product_id}` || ""
     };
 
     setAdsPreview(currentDatas);
