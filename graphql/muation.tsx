@@ -148,3 +148,33 @@ export const UpdateTemplateAdsItem = gql`
     }
   }
 `;
+
+export const INSERT_TEMPLATE_ADS_COPY = gql`
+  mutation insert_template_ads_copy_one(
+    $object: template_ads_copy_insert_input!
+  ) {
+    insert_template_ads_copy_one(object: $object) {
+      id
+      name
+      message
+    }
+  }
+`
+
+export const UPDATE_TEMPLATE_ADS_COPY = gql`
+  mutation update_template_ads_copy(
+    $_set: template_ads_copy_set_input
+    $where: template_ads_copy_bool_exp!
+  ) {
+    update_template_ads_copy(
+      _set: $_set
+      where: $where
+    ) {
+      returning {
+        id
+        name
+        message
+      }
+    }
+  }
+`

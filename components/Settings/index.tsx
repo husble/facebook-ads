@@ -5,6 +5,7 @@ import React, { useState } from 'react';
 
 import ProductType from '#/components/Settings/ProductType';
 import Template from '#/components/Settings/Template';
+import AdCopy from '#/components/Settings/AdCopy';
 
 type ModalProps = {
   open: boolean;
@@ -19,7 +20,8 @@ interface List {
 function Index({ open, setOpen }: ModalProps) {
   const [lists, setLists] = useState<List[]>([
     { title: 'Product Type', components: <ProductType /> },
-    { title: 'Template', components: <Template /> }
+    { title: 'Template', components: <Template /> },
+    { title: 'Template Ad Copy', components: <AdCopy /> }
   ]);
 
   return (
@@ -33,6 +35,7 @@ function Index({ open, setOpen }: ModalProps) {
           height: 'calc(100vh - 40px)',
           overflow: 'hidden'
         }}
+        footer={false}
       >
         <Tabs
           tabPosition="left"

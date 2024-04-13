@@ -96,6 +96,10 @@ export const GET_TEMPLATE_ADS = gql`
       type
       template_ads_items {
         body
+        gender
+        age_max
+        age_min
+        countries
       }
     }
   }
@@ -294,6 +298,16 @@ export const GET_TEMPLATE_ADS_ITEM = gql`
       new_objective
       template_ads_id
       device_platforms
+    }
+  }
+`
+
+export const GET_TEMPLATE_ADS_COPY = gql`
+  query template_ads_copy {
+    template_ads_copy {
+      id
+      name
+      message
     }
   }
 `
