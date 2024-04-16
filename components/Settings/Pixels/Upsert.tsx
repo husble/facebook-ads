@@ -1,55 +1,56 @@
-import { INSERT_TEMPLATE_ADS_COPY, UPDATE_TEMPLATE_ADS_COPY } from '#/graphql/muation';
 import React, { useEffect, useState } from 'react'
-import { Button, Form, Input, Modal, message as Noti } from 'antd'
-import TextArea from 'antd/es/input/TextArea'
-
+import { Button, Form, Input, Modal, message } from 'antd'
 import Client from '#/ultils/client';
-import { TemplateAdCopy } from '#/ultils';
+import { INSERT_FB_PIXEL, UPDATE_FB_PIXEL } from '#/graphql/muation';
+import { FbPixel } from '#/ultils';
 
-function Index({templateEdit, setTemplateEdit, fetchData}: {templateEdit: TemplateAdCopy | null, setTemplateEdit: Function, fetchData: Function}) {
+function Index({pixleEdit, setPixelEdit, fetchData}: {pixleEdit: FbPixel | null, setPixelEdit: Function, fetchData: Function}) {
   const [form] = Form.useForm()
   const [visible, setVisible] = useState<boolean>(false)
 
   useEffect(() => {
-    if (!templateEdit) {
+    if (!pixleEdit) {
       form.setFieldsValue({
         name: "",
-        message: ""
+        pixel_id: "",
+        instagram_id: ""
       })
       return
     }
 
-    const {name, message} = templateEdit
+    const {name, pixel_id, instagram_id} = pixleEdit
 
     form.setFieldsValue({
       name,
-      message
+      pixel_id,
+      instagram_id
     })
     setVisible(true)
-  }, [templateEdit?.id])
+  }, [pixleEdit?.pixel_id])
 
-  const upSertTemplateAdCopy = async (values: TemplateAdCopy) => {
+  const upSertTemplateAdCopy = async (values: FbPixel) => {
     try {
-      const {message, name} = values
-      if (!templateEdit) {
+      const {pixel_id, name, instagram_id} = values
+      if (!pixleEdit) {
         await Client.mutate({
-          mutation: INSERT_TEMPLATE_ADS_COPY,
+          mutation: INSERT_FB_PIXEL,
           variables: {
             object: {
               name,
-              message
+              pixel_id,
+              instagram_id
             }
           }
         })
         fetchData()
         setVisible(false)
-        setTemplateEdit(null)
-        Noti.success("Create is successfull !!!")
+        setPixelEdit(null)
+        message.success("Create is successfull !!!")
         return
       }
-      const {id} = templateEdit
+      const {id} = pixleEdit
       await Client.mutate({
-        mutation: UPDATE_TEMPLATE_ADS_COPY,
+        mutation: UPDATE_FB_PIXEL,
         variables: {
           where: {
             id: {
@@ -58,21 +59,22 @@ function Index({templateEdit, setTemplateEdit, fetchData}: {templateEdit: Templa
           },
           _set: {
             name,
-            message
+            pixel_id,
+            instagram_id
           }
         }
       })
       fetchData()
       setVisible(false)
-      setTemplateEdit(null)
-      Noti.success("Update is successfull !!!")
+      setPixelEdit(null)
+      message.success("Update is successfull !!!")
     } catch (error) {
-      if (!templateEdit) {
-        Noti.error("Create is error !!!")
+      if (!pixleEdit) {
+        message.error("Create is error !!!")
         return
       }
 
-      Noti.error("Update is error !!!")
+      message.error("Update is error !!!")
     }
   }
 
@@ -83,7 +85,7 @@ function Index({templateEdit, setTemplateEdit, fetchData}: {templateEdit: Templa
         open={visible}
         onCancel={() => {
           setVisible(false)
-          setTemplateEdit(null)
+          setPixelEdit(null)
         }}
         footer={false}
       >
@@ -100,14 +102,21 @@ function Index({templateEdit, setTemplateEdit, fetchData}: {templateEdit: Templa
             <Input />
           </Form.Item>
           <Form.Item
-            label="Message"
+            label="Pixel Id"
             rules={[{required: true}]}
-            name="message"
+            name="pixel_id"
           >
-            <TextArea rows={5} />
+            <Input />
+          </Form.Item>
+          <Form.Item
+            label="Instagram"
+            rules={[{required: true}]}
+            name="instagram_id"
+          >
+            <Input />
           </Form.Item>
           <div>
-            <Button type='primary' htmlType='submit'>{!templateEdit ? "Create" : "Update"}</Button>
+            <Button type='primary' htmlType='submit'>{!pixleEdit ? "Create" : "Update"}</Button>
           </div>
         </Form>
       </Modal>

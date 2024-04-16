@@ -178,3 +178,33 @@ export const UPDATE_TEMPLATE_ADS_COPY = gql`
     }
   }
 `
+
+export const INSERT_FB_PIXEL = gql`
+  mutation insert_fb_pixels_one(
+    $object: fb_pixels_insert_input!
+  ) {
+    insert_fb_pixels_one(object: $object) {
+      id
+      name
+      pixel_id
+    }
+  }
+`
+
+export const UPDATE_FB_PIXEL = gql`
+  mutation update_fb_pixels(
+    $_set: fb_pixels_set_input
+    $where: fb_pixels_bool_exp!
+  ) {
+    update_fb_pixels(
+      _set: $_set
+      where: $where
+    ) {
+      returning {
+        id
+        name
+        pixel_id
+      }
+    }
+  }
+`

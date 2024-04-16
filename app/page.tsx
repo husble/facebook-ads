@@ -220,7 +220,8 @@ function Home() {
   const rowSelection = {
     selections: selecteds,
     onChange: onSelectChange,
-    preserveSelectedRowKeys: true
+    preserveSelectedRowKeys: true,
+    selectedRowKeys: selecteds.map(slect => slect.product_id)
   };
 
   const handleFilterAds = debounce((e: ChangeEvent<HTMLInputElement>) => {
@@ -359,7 +360,7 @@ function Home() {
         setParamsCreatedAt={setParamsCreatedAt}
       />
       <Settings open={open} setOpen={setOpen} />
-      <Step2 ads={selecteds} open={openStep2} setOpen={setOpenStep2} />
+      <Step2 storeId={storeRef.current} ads={selecteds} open={openStep2} setOpen={setOpenStep2} setSelecteds={setSelecteds} />
       <ModalImage setImageUrl={setImageUrl} image_url={image_url} />
     </div>
   );

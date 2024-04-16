@@ -4,12 +4,7 @@ import Client from '#/ultils/client';
 import { GET_TEMPLATE_ADS_COPY } from '#/graphql/query';
 
 import UpSertTemp from "#/components/Settings/AdCopy/UpSert"
-
-type TemplateAdCopy = {
-  id: string;
-  name: string;
-  message: string;
-}
+import { TemplateAdCopy } from '#/ultils';
 
 function Index() {
   const [templates, setTemplate] = useState<TemplateAdCopy[]>([])

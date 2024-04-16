@@ -4,7 +4,7 @@ import { Modal, Tabs } from 'antd';
 import React, { useState } from 'react';
 
 import ProductType from '#/components/Settings/ProductType';
-import Template from '#/components/Settings/Template';
+import Pixels from '#/components/Settings/Pixels';
 import AdCopy from '#/components/Settings/AdCopy';
 
 type ModalProps = {
@@ -20,8 +20,8 @@ interface List {
 function Index({ open, setOpen }: ModalProps) {
   const [lists, setLists] = useState<List[]>([
     { title: 'Product Type', components: <ProductType /> },
-    { title: 'Template', components: <Template /> },
-    { title: 'Template Ad Copy', components: <AdCopy /> }
+    { title: 'Template Ad Copy', components: <AdCopy /> },
+    { title: 'Pixels', components: <Pixels /> },
   ]);
 
   return (

@@ -27,7 +27,7 @@ export const GET_PRODUCT_ADS = gql`
       link
       pr
       tags
-      key: id
+      key: product_id
       created_at_string
       store_2 {
         shop
@@ -303,11 +303,45 @@ export const GET_TEMPLATE_ADS_ITEM = gql`
 `
 
 export const GET_TEMPLATE_ADS_COPY = gql`
-  query template_ads_copy {
-    template_ads_copy {
+  query template_ads_copy(
+    $where: template_ads_copy_bool_exp
+  ) {
+    template_ads_copy(where: $where) {
       id
       name
       message
+    }
+  }
+`
+
+export const GET_TEMPLATE_ADS_COPY_PK = gql`
+  query template_ads_copy_by_pk(
+    $name: String!
+  ) {
+    template_ads_copy_by_pk(name: $name) {
+      id
+      name
+      message
+    }
+  }
+`
+
+export const GET_PIXELS = gql`
+  query fb_pixels(
+    $where: fb_pixels_bool_exp
+  ) {
+    fb_pixels(
+      where: $where
+      order_by: {
+        created_at: asc
+      }
+    ) {
+      id
+      name
+      pixel_id
+      is_modified
+      store_id
+      instagram_id
     }
   }
 `
