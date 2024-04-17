@@ -1,8 +1,8 @@
 'use client';
 
-import { useQuery } from '@apollo/client';
+import { useLazyQuery, useQuery } from '@apollo/client';
 import { Button, Input, Select, Table, Tag } from 'antd';
-import { ChangeEvent, Key, useContext, useRef, useState } from 'react';
+import { ChangeEvent, Key, useContext, useEffect, useRef, useState } from 'react';
 import Image from 'next/image';
 import debounce from 'lodash.debounce';
 import { FilterOutlined } from '@ant-design/icons';
@@ -67,7 +67,7 @@ function Home() {
     Record<string, string>
   >({ _lte: '', _gte: '' });
   const { user } = useContext(UserContext);
-  const storeRef = useRef(200);
+  const storeRef = useRef<number>(200);
   const queries = useRef({
     where: {
       _and: {
@@ -84,10 +84,7 @@ function Home() {
     }
   });
 
-  const { refetch } = useQuery(GET_PRODUCT_ADS, {
-    variables: {
-      ...queries.current
-    },
+  const [fetchAds]: any = useLazyQuery(GET_PRODUCT_ADS, {
     onCompleted: ({
       product_ads,
       product_ads_aggregate,
@@ -100,6 +97,15 @@ function Home() {
     },
     fetchPolicy: 'cache-and-network'
   });
+
+  useEffect(() => {
+    setLoading(true)
+    fetchAds({
+      variables: {
+        ...queries.current
+      }
+    })
+  }, [])
 
   const handleShowImage = (image_url: string) => {
     setImageUrl(image_url);
@@ -170,7 +176,8 @@ function Home() {
   ];
 
   const handleGetNewData = () => {
-    refetch({
+    setLoading(true)
+    fetchAds({
       ...queries.current
     });
   };
@@ -178,7 +185,7 @@ function Home() {
   const handleSelectStore = (shop: String) => {
     const matchedStore = stores.find((s: STORE) => s.shop === shop);
 
-    setLoading(true);
+    // setLoading(true);
     if (matchedStore) {
       const storeId = matchedStore.id as number;
       const new_queries: any = {
@@ -198,14 +205,10 @@ function Home() {
       storeRef.current = storeId;
 
       queries.current = new_queries;
-      console.log(
-        '%cpage.tsx line:197 new_queries',
-        'color: #007acc;',
-        new_queries
-      );
+
       handleGetNewData();
 
-      setLoading(false);
+      // setLoading(false);
     } else {
       // Handle the case where no matching store was found
       setLoading(false);
@@ -220,7 +223,8 @@ function Home() {
   const rowSelection = {
     selections: selecteds,
     onChange: onSelectChange,
-    preserveSelectedRowKeys: true
+    preserveSelectedRowKeys: true,
+    selectedRowKeys: selecteds.map(slect => slect.product_id)
   };
 
   const handleFilterAds = debounce((e: ChangeEvent<HTMLInputElement>) => {
@@ -359,7 +363,7 @@ function Home() {
         setParamsCreatedAt={setParamsCreatedAt}
       />
       <Settings open={open} setOpen={setOpen} />
-      <Step2 ads={selecteds} open={openStep2} setOpen={setOpenStep2} />
+      <Step2 storeId={storeRef.current} ads={selecteds} open={openStep2} setOpen={setOpenStep2} setSelecteds={setSelecteds} />
       <ModalImage setImageUrl={setImageUrl} image_url={image_url} />
     </div>
   );

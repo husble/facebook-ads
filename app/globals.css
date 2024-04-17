@@ -28,7 +28,11 @@ body {
   display: flex;
   flex-wrap: wrap;
   gap: 20px;
-  padding: 0;
+  padding: 10px;
+}
+
+.drawer_step2 .ant-drawer-body {
+  padding: 0 24px !important;
 }
 
 .drawer_step2 .table_step2 .camp_list_items li{
@@ -38,9 +42,11 @@ body {
   align-items: flex-start;
 }
 
-.drawer_step2 .table_step2 .camp_list_items li .capm_item--label{
+.drawer_step2 .table_step2 .camp_list_items li .camp_item--label{
   color: #000;
   font-weight: 700;
+  width: 150px;
+  display: inline-block;
 }
 
 .btn__create--post {
@@ -51,4 +57,8 @@ body {
 .btn__create--camp {
   background-color: green !important;
   color: #fff;
+}
+
+.camp_type {
+  width: calc(100% - 150px);
 }
