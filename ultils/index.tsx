@@ -156,3 +156,9 @@ export const FLEXIABLE_OPTIONS = [
     ]
   }
 ]
+
+export const STORES: any = {
+  200: "PAW",
+  227: "TC",
+  233: "WR",
+}

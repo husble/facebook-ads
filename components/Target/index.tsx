@@ -8,15 +8,18 @@ const AGES = createAgeOptions()
 
 function Index({record, handleChooseSelect, is_all}: {record: Product | TARGET, handleChooseSelect: Function, is_all: boolean}) {
   return (
-    <>
-      <strong>Daily Budget</strong>
+    <div className='flex items-center flex-wrap gap-2'>
+      <div className='flex items-center gap-1'>
+        <strong>Daily Budget:</strong>
         <InputNumber
           prefix="$"
           value={record.ad_set_daily_budget}
           key={Math.random()}
           onBlur={(e) => handleChooseSelect({value: e.target.value, record, field_name: "ad_set_daily_budget", is_all})}
         />
-        <strong>Location: </strong>
+      </div>
+      <div className='flex items-center gap-1'>
+        <strong>Location:</strong>
         <Select
           value={record.countries}
           key={Math.random()}
@@ -24,7 +27,9 @@ function Index({record, handleChooseSelect, is_all}: {record: Product | TARGET, 
           mode='multiple'
           onChange={(value) => handleChooseSelect({value, record, field_name: "countries", is_all})}
         />
-        <strong> Age: </strong>
+      </div>
+      <div className='flex items-center gap-1'>
+        <strong>Age:</strong>
         <Select
           style={{ width: '70px' }}
           key={Math.random()}
@@ -48,7 +53,9 @@ function Index({record, handleChooseSelect, is_all}: {record: Product | TARGET, 
             <Option key={age.label} value={age.value}>{age.label}</Option>
           ))}
         </Select>
-        <strong> Gender: </strong>
+      </div>
+      <div className='flex items-center gap-1'>
+        <strong>Gender:</strong>
         <Radio.Group
           value={record.gender}
           key={Math.random()}
@@ -58,7 +65,9 @@ function Index({record, handleChooseSelect, is_all}: {record: Product | TARGET, 
             <Radio key={gender.value} value={gender.value}>{gender.label}</Radio>
           ))}
         </Radio.Group>
-        <strong>Target</strong>
+      </div>
+      <div className='flex items-center gap-1'>
+        <strong>Target:</strong>
         <Select
           key={Math.random()}
           style={{width: 200}}
@@ -66,7 +75,8 @@ function Index({record, handleChooseSelect, is_all}: {record: Product | TARGET, 
           value={record.flexiable}
           onChange={(value) => handleChooseSelect({value, record, field_name: "flexiable", is_all})}
         />
-    </>
+      </div>
+    </div>
   )
 }
 

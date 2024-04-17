@@ -8,21 +8,30 @@ import { ACCOUNT_IDS, LINK_DATAS, PAGES } from '#/ultils/config';
 import { useQuery } from '@apollo/client';
 import { GET_PIXELS, GET_TEMPLATE_ADS_COPY, GET_TEMPLATE_ADS_COPY_PK } from '#/graphql/query';
 import moment from 'moment';
-import { ChromeOutlined } from '@ant-design/icons';
+import { ChromeOutlined, CopyTwoTone } from '@ant-design/icons';
 import TextArea from 'antd/es/input/TextArea';
 
 import FB from '#/app/api/fb';
-import {FbPixel, PAYLOAD_SELECT, Product, TARGET, TYPES, createAgeOptions} from '#/ultils';
+import {FbPixel, PAYLOAD_SELECT, Product, STORES, TARGET, TYPES} from '#/ultils';
 import Client from '#/ultils/client';
 
 import Target from "#/components/Target"
 
 import Styled from "./Style"
 import Image from 'next/image';
+import { isArray } from '@apollo/client/utilities';
 
 const {Option} = Select
 
-function Index({ open, setOpen, ads, storeId, setSelecteds }: any) {
+type Props = {
+  open: boolean;
+  setOpen: Function;
+  ads: Product[];
+  storeId: number;
+  setSelecteds: Function;
+}
+
+function Index({ open, setOpen, ads, storeId, setSelecteds }: Props) {
   const [adsPreview, setAdsPreview] = useState<Product[]>([]);
   const [loading, setLoading] = useState<boolean>(false);
   const [isCreatePost, setIsCreatePost] = useState<Boolean>(false)
@@ -46,11 +55,11 @@ function Index({ open, setOpen, ads, storeId, setSelecteds }: any) {
   const fbPixels = useRef([])
   const pixel = useRef<string>("")
   
-  const getTemplateMessage = async () => {
+  const getTemplateMessage = async (value?: string ) => {
     const {data: {template_ads_copy_by_pk}} = await Client.query({
       query: GET_TEMPLATE_ADS_COPY_PK,
       variables: {
-        name: template.current
+        name: value || template.current
       }
     })
 
@@ -83,6 +92,29 @@ function Index({ open, setOpen, ads, storeId, setSelecteds }: any) {
       pixelDefault()
     }
   });
+
+  const createNameAdWhenChangeCountries = (countries: string[], name_ads_account: string) => {
+    const length = countries.length
+    let newName = name_ads_account
+
+    switch (length) {
+      case 1:
+        newName = name_ads_account.replace(`[${STORES[storeId]} ALL`, `[${STORES[storeId]}`)
+        break
+
+      case 2:
+      case 3:
+      case 4:
+        if (name_ads_account.indexOf(`[${STORES[storeId]} ALL`) === -1) {
+          newName = name_ads_account.replace(`[${STORES[storeId]}`, `[${STORES[storeId]} ALL`)
+        }
+        break
+
+      default: break
+    }
+
+    return newName
+  }
 
   useEffect(() => {
     async function mappingData() {
@@ -134,7 +166,7 @@ function Index({ open, setOpen, ads, storeId, setSelecteds }: any) {
         results.push({
           ...ad,
           key: ad.product_id,
-          name_ads_account: new_name_ads_account,
+          name_ads_account: createNameAdWhenChangeCountries(ad.countries || target.countries, new_name_ads_account),
           template_account: account.current?.split("=")[0],
           template_user: name_user.current,
           body: `${message} \nCustomize yours: https://${store_name.replace("blithehub.myshopify.com", "wrappiness.co").replace(".myshopify", "")}/${LINK_DATAS[store_name].slice(0, 3)}-${ad.product_id}` || "",
@@ -318,7 +350,16 @@ function Index({ open, setOpen, ads, storeId, setSelecteds }: any) {
           return (
             <div style={{display: 'flex', gap: 10}}>
               <Input allowClear onChange={(e) => handleChangePostId(e, row)} key={post_id} defaultValue={post_id} />
-              {post_id ? <ChromeOutlined color='#1677ff' onClick={() => gotoPost(post_id)} /> : ""}
+              {post_id ? (
+                  <Tooltip title="Copy">
+                    <CopyTwoTone onClick={() => navigator.clipboard.writeText(post_id)} />
+                  </Tooltip>
+                ) : ""}
+              {post_id ? (
+                <Tooltip title="Go to post">
+                  <ChromeOutlined color='#1677ff' onClick={() => gotoPost(post_id)} />
+                </Tooltip>
+              ) : ""}
             </div>
           );
         }
@@ -679,24 +720,34 @@ function Index({ open, setOpen, ads, storeId, setSelecteds }: any) {
     if (!is_all) {
       const currentDatas: Product[] = [...adsPreview];
       const { key } = record;
-      console.log(key)
       const findIndex = currentDatas.findIndex(
         (data: Product) => data.key === key
       );
-  
+      let name_ads_account = currentDatas[findIndex]["name_ads_account"]
+      if (field_name === "countries" && isArray(value)) {
+        name_ads_account = createNameAdWhenChangeCountries(value, name_ads_account)
+      }
       currentDatas[findIndex] = {
         ...currentDatas[findIndex],
-        [field_name]: value
+        [field_name]: value,
+        name_ads_account
       };
       setAdsPreview(currentDatas);
 
       return
     }
 
-    const currentDatas: Product[] = adsPreview.map(ad => ({
-      ...ad,
-      [field_name]: value
-    }))
+    const currentDatas: Product[] = adsPreview.map(ad => {
+      let name_ads_account = ad["name_ads_account"]
+      if (field_name === "countries" && isArray(value)) {
+        name_ads_account = createNameAdWhenChangeCountries(value, name_ads_account)
+      }
+      return {
+        ...ad,
+        [field_name]: value,
+        name_ads_account
+      }
+    })
     const newTarget: any = {...target}
     newTarget[field_name] = value
     setAdsPreview(currentDatas);
@@ -711,6 +762,21 @@ function Index({ open, setOpen, ads, storeId, setSelecteds }: any) {
       ...ad,
       body: `${message} \n Customize yours: https://${store_name.replace("blithehub.myshopify.com", "wrappiness.co").replace(".myshopify", "")}/${LINK_DATAS[store_name].slice(0, 3)}-${adsPreview[0].product_id}` || ""
     }))
+    setAdsPreview(currentDatas);
+  }
+
+  const handleChooseTemplateForOneRecord = async (value: string, record: Product) => {
+    const message = await getTemplateMessage(value)
+    const currentDatas: Product[] = [...adsPreview];
+    const { key } = record;
+    const findIndex = currentDatas.findIndex(
+      (data: Product) => data.key === key
+    );
+    const store_name = adsPreview[0].store_2.shop
+    currentDatas[findIndex] = {
+      ...currentDatas[findIndex],
+      body: `${message} \n Customize yours: https://${store_name.replace("blithehub.myshopify.com", "wrappiness.co").replace(".myshopify", "")}/${LINK_DATAS[store_name].slice(0, 3)}-${adsPreview[0].product_id}` || ""
+    };
     setAdsPreview(currentDatas);
   }
 
@@ -755,74 +821,76 @@ function Index({ open, setOpen, ads, storeId, setSelecteds }: any) {
         placement="left"
         className='drawer_step2'
       >
-        <div className="flex justify-between flex-wrap gap-2">
-          <div>
-            <div className='flex gap-2'>
-              <Select
-                defaultValue="image"
-                options={TYPES}
-                onChange={handleChangeTemplateType}
-                style={{width: 150}}
-              />
-              <Input
-                allowClear
-                onChange={(e) => handleChangeUser(e)}
-                placeholder="phu"
-                style={{width: "150px"}}
-              />
-              <Select
-                style={{width: "200px"}}
-                placeholder="please choose account"
-                onChange={chooseAccount}
-                showSearch
-              >
-                {ACCOUNT_IDS.map(act => (
-                  <Option key={act.value} value={act.value}>{act.label}</Option>
-                ))}
-              </Select>
-              <Select
-                style={{width: "200px"}}
-                placeholder="choose page"
-                onChange={choosePage}
-              >
-                {PAGES.map(page => (
-                  <Option key={page.value} value={page.value}>{page.label}</Option>
-                ))}
-              </Select>
-              <Select
-                style={{ width: '200px' }}
-                placeholder="choose template"
-                onChange={handleChooseTemplate}
-                options={templateAds.current.map((template: any) => ({
-                  label: template.name,
-                  value: template.name
-                }))}
-              />
-              <Select
-                style={{ width: '200px' }}
-                placeholder="choose pixel"
-                onChange={handleChoosePixel}
-                options={fbPixels.current.map((template: any) => ({
-                  label: template.name,
-                  value: `${template.pixel_id}=${template.instagram_id}`
-                }))}
-              />
+        <div className='sticky'>
+          <div className="flex justify-between flex-wrap gap-2">
+            <div>
+              <div className='flex gap-2'>
+                <Select
+                  defaultValue="image"
+                  options={TYPES}
+                  onChange={handleChangeTemplateType}
+                  style={{width: 150}}
+                />
+                <Input
+                  allowClear
+                  onChange={(e) => handleChangeUser(e)}
+                  placeholder="phu"
+                  style={{width: "150px"}}
+                />
+                <Select
+                  style={{width: "200px"}}
+                  placeholder="please choose account"
+                  onChange={chooseAccount}
+                  showSearch
+                >
+                  {ACCOUNT_IDS.map(act => (
+                    <Option key={act.value} value={act.value}>{act.label}</Option>
+                  ))}
+                </Select>
+                <Select
+                  style={{width: "200px"}}
+                  placeholder="choose page"
+                  onChange={choosePage}
+                >
+                  {PAGES.map(page => (
+                    <Option key={page.value} value={page.value}>{page.label}</Option>
+                  ))}
+                </Select>
+                <Select
+                  style={{ width: '200px' }}
+                  placeholder="choose template"
+                  onChange={handleChooseTemplate}
+                  options={templateAds.current.map((template: any) => ({
+                    label: template.name,
+                    value: template.name
+                  }))}
+                />
+                <Select
+                  style={{ width: '200px' }}
+                  placeholder="choose pixel"
+                  onChange={handleChoosePixel}
+                  options={fbPixels.current.map((template: any) => ({
+                    label: template.name,
+                    value: `${template.pixel_id}=${template.instagram_id}`
+                  }))}
+                />
+              </div>
+              <div className='flex gap-2 mt-3 items-center'>
+                <Target record={target} is_all={true} handleChooseSelect={handleChooseSelect} />
+              </div>
             </div>
-            <div className='flex gap-2 mt-3 items-center'>
-              <Target record={target} is_all={true} handleChooseSelect={handleChooseSelect} />
+            <div>
+              <Button className="btn__export--csv" onClick={handleExportCamp} type="primary">
+                Export CSV
+              </Button>
+              {renderCreatePost()}
+              <Button disabled={!isCreateCamp} className="btn__create--camp ml-2" onClick={handleCreateCamp} type="primary">
+                Create Campaigns
+              </Button>
             </div>
           </div>
-          <div>
-            <Button className="btn__export--csv" onClick={handleExportCamp} type="primary">
-              Export CSV
-            </Button>
-            {renderCreatePost()}
-            <Button disabled={!isCreateCamp} className="btn__create--camp ml-2" onClick={handleCreateCamp} type="primary">
-              Create Campaigns
-            </Button>
-          </div>
+          <Switch checked={showAll} onChange={changeShowAll} unCheckedChildren='Show all' checkedChildren='Show all' />
         </div>
-        <Switch checked={showAll} onChange={changeShowAll} unCheckedChildren='Show all' checkedChildren='Show all' />
         <Table
           loading={loading}
           columns={columns}
@@ -836,7 +904,16 @@ function Index({ open, setOpen, ads, storeId, setSelecteds }: any) {
             expandedRowRender: (record) => (
               <ul key={record.title} className='camp_list_items'>
                 <li>
-                  <div className='camp_target flex items-center gap-2'>
+                  <div className='camp_target flex items-center gap-2 flex-wrap'>
+                    <Select
+                      style={{ width: '200px' }}
+                      placeholder="choose template"
+                      onChange={(value) => handleChooseTemplateForOneRecord(value, record)}
+                      options={templateAds.current.map((template: any) => ({
+                        label: template.name,
+                        value: template.name
+                      }))}
+                    />
                     <Target is_all={false} record={record} handleChooseSelect={handleChooseSelect} />
                   </div>
                 </li>

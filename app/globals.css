@@ -31,6 +31,10 @@ body {
   padding: 10px;
 }
 
+.drawer_step2 .ant-drawer-body {
+  padding: 0 24px !important;
+}
+
 .drawer_step2 .table_step2 .camp_list_items li{
   display: flex;
   gap: 10px;
