@@ -178,7 +178,9 @@ function Home() {
   const handleGetNewData = () => {
     setLoading(true)
     fetchAds({
-      ...queries.current
+      variables: {
+        ...queries.current
+      }
     });
   };
 
