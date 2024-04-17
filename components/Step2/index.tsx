@@ -925,7 +925,8 @@ function Index({ open, setOpen, ads, storeId, setSelecteds }: Props) {
                   <TextArea
                     onBlur={(e) => handleChangeMessage(e, record)}
                     rows={5} style={{width: "100%"}}
-                    value={record.body}
+                    defaultValue={record.body}
+                    key={record.body}
                   />
                 </li>
               </ul>
