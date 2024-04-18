@@ -760,7 +760,7 @@ function Index({ open, setOpen, ads, storeId, setSelecteds }: Props) {
     const store_name = adsPreview[0].store_2.shop
     const currentDatas: Product[] = [...adsPreview].map(ad => ({
       ...ad,
-      body: `${message} \n Customize yours: https://${store_name.replace("blithehub.myshopify.com", "wrappiness.co").replace(".myshopify", "")}/${LINK_DATAS[store_name].slice(0, 3)}-${adsPreview[0].product_id}` || ""
+      body: `${message} \n Customize yours: https://${store_name.replace("blithehub.myshopify.com", "wrappiness.co").replace(".myshopify", "")}/${LINK_DATAS[store_name].slice(0, 3)}-${ad.product_id}` || ""
     }))
     setAdsPreview(currentDatas);
   }
@@ -772,10 +772,10 @@ function Index({ open, setOpen, ads, storeId, setSelecteds }: Props) {
     const findIndex = currentDatas.findIndex(
       (data: Product) => data.key === key
     );
-    const store_name = adsPreview[0].store_2.shop
+    const store_name = record.store_2.shop
     currentDatas[findIndex] = {
       ...currentDatas[findIndex],
-      body: `${message} \n Customize yours: https://${store_name.replace("blithehub.myshopify.com", "wrappiness.co").replace(".myshopify", "")}/${LINK_DATAS[store_name].slice(0, 3)}-${adsPreview[0].product_id}` || ""
+      body: `${message} \n Customize yours: https://${store_name.replace("blithehub.myshopify.com", "wrappiness.co").replace(".myshopify", "")}/${LINK_DATAS[store_name].slice(0, 3)}-${record.product_id}` || ""
     };
     setAdsPreview(currentDatas);
   }
