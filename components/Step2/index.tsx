@@ -116,6 +116,42 @@ function Index({ open, setOpen, ads, storeId, setSelecteds }: Props) {
     return newName
   }
 
+  const checkFulFillDataCreatePost = (): Boolean => {
+    if (account.current && account.current !== "***" && page.current && name_user.current && name_user.current !== "**") {
+      setIsCreatePost(true)
+      return true
+    }
+
+    setIsCreatePost(false)
+
+    return false
+  }
+
+  const checkFulFillDataCreateCamp = (ads: Product[], type?: string) => {
+    const check = checkFulFillDataCreatePost()
+    if (check && (type || templateType).indexOf("creative") !== -1) {
+      setIsCreateCamp(true)
+
+      return
+    } 
+
+    if (!check) {
+      setIsCreateCamp(false)
+
+      return
+    }
+
+    for (const ad of ads) {
+      if (!ad["post_id"]) {
+        setIsCreateCamp(false)
+
+        return
+      }
+    }
+
+    setIsCreateCamp(true)
+  }
+
   useEffect(() => {
     async function mappingData() {
       setLoading(true);
@@ -183,51 +219,16 @@ function Index({ open, setOpen, ads, storeId, setSelecteds }: Props) {
       if (showAll) {
         setExpendRows(expendRows)
       }
+      checkFulFillDataCreateCamp(results, templateType)
       setAdsPreview(results);
       setLoading(false);
     }
 
     if (!open) return
 
-    setIsCreateCamp(false)
+    // setIsCreateCamp(false)
     mappingData();
   }, [ads, open]);
-
-  const checkFulFillDataCreatePost = (): Boolean => {
-    if (account.current && account.current !== "***" && page.current && name_user.current && name_user.current !== "**") {
-      setIsCreatePost(true)
-      return true
-    }
-
-    setIsCreatePost(false)
-
-    return false
-  }
-
-  const checkFulFillDataCreateCamp = (ads: Product[], type?: string) => {
-    const check = checkFulFillDataCreatePost()
-    if (check && (type || templateType).indexOf("creative") !== -1) {
-      setIsCreateCamp(true)
-
-      return
-    } 
-
-    if (!check) {
-      setIsCreateCamp(false)
-
-      return
-    }
-
-    for (const ad of ads) {
-      if (!ad["post_id"]) {
-        setIsCreateCamp(false)
-
-        return
-      }
-    }
-
-    setIsCreateCamp(true)
-  }
 
   const handleChangeUser = debounce(
     (e: ChangeEvent<HTMLInputElement>) => {
