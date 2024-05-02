@@ -146,12 +146,16 @@ export const FLEXIABLE_OPTIONS = [
     label: "Realationship statuses",
     options: [
       {
-        label: "Married",
-        value: "relationship_statuses=2=Married",
+        label: "Single",
+        value: "relationship_statuses=1=Single",
       },
       {
         label: "In relationship",
-        value: "relationship_statuses=3=In relationship"
+        value: "relationship_statuses=2=In relationship"
+      },
+      {
+        label: "Married",
+        value: "relationship_statuses=3=Married",
       },
     ]
   }
