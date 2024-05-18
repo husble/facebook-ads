@@ -56,7 +56,9 @@ export const ACCOUNT_IDS = [
   {"label": "MX-W-08-98", "value": "Chao98=3722182198038398"},
   {"label": "MX-W-08-93", "value": "Chao93=3581004985561698"},
   {"label": "MX-W-08-96", "value": "Chao96=207059492373374"},
-  {"label": "MX-B-07-11", "value": "Chao11=629163599326051"}
+  {"label": "MX-B-07-11", "value": "Chao11=629163599326051"},
+  {"label": "Tee.vietliver 6", "value": "Tee6=704300727055103"},
+  {"label": "Tee.vietliver 5", "value": "Tee5=1786321314842936"}
 ]
 
 export const PAGES = [
