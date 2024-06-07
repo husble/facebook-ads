@@ -345,3 +345,16 @@ export const GET_PIXELS = gql`
     }
   }
 `
+
+export const GET_ACCOUNTS = gql`
+  query accounts(
+    $where: accounts_bool_exp
+  ) {
+    accounts(
+      where: $where
+    ) {
+      id
+      name
+    }
+  }
+`
