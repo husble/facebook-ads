@@ -4,9 +4,9 @@ import debounce from 'lodash.debounce';
 import * as XLSX from 'xlsx';
 import * as FileSaver from 'file-saver';
 
-import { ACCOUNT_IDS, LINK_DATAS, PAGES } from '#/ultils/config';
+import { LINK_DATAS, PAGES } from '#/ultils/config';
 import { useQuery } from '@apollo/client';
-import { GET_PIXELS, GET_TEMPLATE_ADS_COPY, GET_TEMPLATE_ADS_COPY_PK } from '#/graphql/query';
+import { GET_ACCOUNTS, GET_PIXELS, GET_TEMPLATE_ADS_COPY, GET_TEMPLATE_ADS_COPY_PK } from '#/graphql/query';
 import moment from 'moment';
 import { ChromeOutlined, CopyTwoTone } from '@ant-design/icons';
 import TextArea from 'antd/es/input/TextArea';
@@ -31,6 +31,11 @@ type Props = {
   setSelecteds: Function;
 }
 
+type Account = {
+  id: string;
+  name: string;
+}
+
 function Index({ open, setOpen, ads, storeId, setSelecteds }: Props) {
   const [adsPreview, setAdsPreview] = useState<Product[]>([]);
   const [loading, setLoading] = useState<boolean>(false);
@@ -39,6 +44,7 @@ function Index({ open, setOpen, ads, storeId, setSelecteds }: Props) {
   const [templateType, setProductType] = useState<string>('image');
   const [expendRows, setExpendRows] = useState<string[]>([]);
   const [showAll, setShowAll] = useState(false)
+  const [accounts, setAccounts] = useState<Account[]>([])
   const [target, setTarget] = useState<TARGET>({
     ad_set_daily_budget: 20,
     age_min: 30,
@@ -54,6 +60,22 @@ function Index({ open, setOpen, ads, storeId, setSelecteds }: Props) {
   const templateAds = useRef([])
   const fbPixels = useRef([])
   const pixel = useRef<string>("")
+  
+  useQuery(GET_ACCOUNTS, {
+    variables: {
+      where: {}
+    },
+    onCompleted: ({accounts}) => {
+      const mappingAccounts = accounts.map((account: Account) => {
+        const {id, name} = account
+        return {
+          name,
+          id: `${name}=${id}`
+        }
+      })
+      setAccounts(mappingAccounts)
+    }
+  })
   
   const getTemplateMessage = async (value?: string ) => {
     const {data: {template_ads_copy_by_pk}} = await Client.query({
@@ -564,7 +586,6 @@ function Index({ open, setOpen, ads, storeId, setSelecteds }: Props) {
       setLoading(false);
       message.success('Create Posts successfull !!!');
     } catch (error) {
-      console.log(error)
       setIsCreateCamp(false)
       setLoading(false);
       message.error('Create Campaigns failed !!!');
@@ -812,7 +833,6 @@ function Index({ open, setOpen, ads, storeId, setSelecteds }: Props) {
     }
     setExpendRows(newExpendRows)
   }
-
   return (
     <Styled>
       <Drawer
@@ -839,13 +859,13 @@ function Index({ open, setOpen, ads, storeId, setSelecteds }: Props) {
                   style={{width: "150px"}}
                 />
                 <Select
-                  style={{width: "200px"}}
-                  placeholder="please choose account"
+                  style={{width: "120px"}}
+                  placeholder="account"
                   onChange={chooseAccount}
                   showSearch
                 >
-                  {ACCOUNT_IDS.map(act => (
-                    <Option key={act.value} value={act.value}>{act.label}</Option>
+                  {accounts.map(act => (
+                    <Option key={act.id} value={act.id}>{act.name}</Option>
                   ))}
                 </Select>
                 <Select
