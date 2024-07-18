@@ -88,6 +88,8 @@ export type Product = {
   countries: string[];
   ad_set_daily_budget: number;
   flexiable: string;
+  is_clone: boolean;
+  template_adset_name: string;
 };
 
 export type TARGET = {

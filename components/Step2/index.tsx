@@ -36,6 +36,41 @@ type Account = {
   name: string;
 }
 
+interface PayloadAdsetName {
+  countries: string[];
+  age_min: number;
+  age_max: number;
+  gender: string;
+}
+
+interface PayloadAdName extends PayloadAdsetName {
+  is_clone: boolean;
+  name_ads_account: string;
+  template_adset_name: string;
+}
+
+const CLONE_LABEL = "-Clone"
+
+const createAdSetName = (payload: PayloadAdsetName): string => {
+  const {countries, age_max, age_min, gender} = payload
+
+  let gender_value = "All"
+  switch (gender) {
+    case "Women":
+      gender_value = "W"
+      break
+
+    case "Men":
+      gender_value = "M"
+      break
+
+    default: break
+  }
+  let name = `${countries.join("-")}/${gender_value}${age_min}-${age_max}`
+
+  return name
+}
+
 function Index({ open, setOpen, ads, storeId, setSelecteds }: Props) {
   const [adsPreview, setAdsPreview] = useState<Product[]>([]);
   const [loading, setLoading] = useState<boolean>(false);
@@ -60,7 +95,6 @@ function Index({ open, setOpen, ads, storeId, setSelecteds }: Props) {
   const templateAds = useRef([])
   const fbPixels = useRef([])
   const pixel = useRef<string>("")
-  
   useQuery(GET_ACCOUNTS, {
     variables: {
       where: {}
@@ -115,7 +149,18 @@ function Index({ open, setOpen, ads, storeId, setSelecteds }: Props) {
     }
   });
 
-  const createNameAdWhenChangeCountries = (countries: string[], name_ads_account: string) => {
+  const createPayloadAdset = (ad: Product): PayloadAdsetName => {
+    const {countries, age_max, age_min, gender} = ad
+
+    return {
+      age_max: age_max || target.age_max,
+      age_min: age_min || target.age_min,
+      countries: countries || target.countries,
+      gender: gender || target.gender
+    }
+  }
+
+  const createNameAdWhenChangeCountries = (countries: string[], name_ads_account: string): string => {
     const length = countries.length
     let newName = name_ads_account
 
@@ -186,11 +231,11 @@ function Index({ open, setOpen, ads, storeId, setSelecteds }: Props) {
         const date = `0${new Date().getDate()}`.slice(-2);
         const month = `0${new Date().getMonth() + 1}`.slice(-2);
         const year = `${new Date().getFullYear()}`.slice(-2);
+        const is_clone = name_ads_account.indexOf(CLONE_LABEL) !== -1
         let new_name_ads_account: string = name_ads_account.replace(
           '*',
           `${date}-${month}-${year}`
-        );
-
+        ).replace(CLONE_LABEL, "")
         switch (templateType) {
           case "image":
             new_name_ads_account = new_name_ads_account.replace(/G00|G02/gi, 'G01') + "-Published Ads"
@@ -220,11 +265,14 @@ function Index({ open, setOpen, ads, storeId, setSelecteds }: Props) {
           new_name_ads_account = new_name_ads_account.replace("**", name_user.current)
         }
         const store_name = ad.store_2.shop
-
+        const payLoadAdset = createPayloadAdset({...ad, is_clone, name_ads_account: new_name_ads_account})
+        const template_adset_name = createAdSetName(payLoadAdset)
+        new_name_ads_account = updateNameAd({...payLoadAdset, is_clone, name_ads_account: new_name_ads_account, template_adset_name})
         results.push({
           ...ad,
           key: ad.product_id,
-          name_ads_account: createNameAdWhenChangeCountries(ad.countries || target.countries, new_name_ads_account),
+          template_adset_name,
+          name_ads_account: new_name_ads_account,
           template_account: account.current?.split("=")[0],
           template_user: name_user.current,
           body: `${message} \nCustomize yours: https://${store_name.replace("blithehub.myshopify.com", "wrappiness.co").replace(".myshopify", "")}/${LINK_DATAS[store_name].slice(0, 3)}-${ad.product_id}` || "",
@@ -233,7 +281,8 @@ function Index({ open, setOpen, ads, storeId, setSelecteds }: Props) {
           age_max: target.age_max,
           countries: target.countries,
           ad_set_daily_budget: target.ad_set_daily_budget,
-          flexiable: target.flexiable
+          flexiable: target.flexiable,
+          is_clone
         });
 
         expendRows.push(ad.product_id)
@@ -319,7 +368,7 @@ function Index({ open, setOpen, ads, storeId, setSelecteds }: Props) {
       name_ads_account: e.target.value
     };
     setAdsPreview(currentDatas);
-  }, 300)
+  }, 1000)
 
   const removeCampaign = (record: Product) => {
     const newAdPreviews = [...adsPreview]
@@ -736,6 +785,34 @@ function Index({ open, setOpen, ads, storeId, setSelecteds }: Props) {
     }
   }
 
+  const updateNameAd = (payload: PayloadAdName): string => {
+    const {countries, name_ads_account, age_max, age_min, gender, is_clone, template_adset_name} = payload
+    let new_name = name_ads_account.replace(CLONE_LABEL, "").replace(`-${template_adset_name}`, "")
+    new_name = createNameAdWhenChangeCountries(countries, new_name) + "-" + createAdSetName({countries, age_max, age_min, gender})
+    new_name = is_clone ? new_name + CLONE_LABEL : new_name
+    return new_name
+  }
+
+  const handleChangeFieldOfAdset = (field_name: string, ad: Product) => {
+    const {name_ads_account, is_clone, template_adset_name} = ad
+    let new_name_ads_account = name_ads_account
+    let new_template_adset_name = template_adset_name
+    switch (field_name) {
+      case "countries":
+      case "gender":
+      case "age_min":
+      case "age_max":
+        const payload = createPayloadAdset(ad)
+        new_name_ads_account = updateNameAd({...payload, is_clone, name_ads_account, template_adset_name})
+        new_template_adset_name = createAdSetName(payload)
+
+      default: return {
+        new_name_ads_account,
+        new_template_adset_name
+      }
+    }
+  }
+
   const handleChooseSelect = (payload: PAYLOAD_SELECT) => {
     const {value, record, field_name, is_all} = payload
 
@@ -745,14 +822,14 @@ function Index({ open, setOpen, ads, storeId, setSelecteds }: Props) {
       const findIndex = currentDatas.findIndex(
         (data: Product) => data.key === key
       );
-      let name_ads_account = currentDatas[findIndex]["name_ads_account"]
-      if (field_name === "countries" && isArray(value)) {
-        name_ads_account = createNameAdWhenChangeCountries(value, name_ads_account)
-      }
+      // let name_ads_account = currentDatas[findIndex]["name_ads_account"]
+      const {new_name_ads_account, new_template_adset_name} = handleChangeFieldOfAdset(field_name, {...currentDatas[findIndex], [field_name]: value})
+
       currentDatas[findIndex] = {
         ...currentDatas[findIndex],
         [field_name]: value,
-        name_ads_account
+        name_ads_account: new_name_ads_account,
+        template_adset_name: new_template_adset_name
       };
       setAdsPreview(currentDatas);
 
@@ -760,14 +837,13 @@ function Index({ open, setOpen, ads, storeId, setSelecteds }: Props) {
     }
 
     const currentDatas: Product[] = adsPreview.map(ad => {
-      let name_ads_account = ad["name_ads_account"]
-      if (field_name === "countries" && isArray(value)) {
-        name_ads_account = createNameAdWhenChangeCountries(value, name_ads_account)
-      }
+      const {new_name_ads_account, new_template_adset_name} = handleChangeFieldOfAdset(field_name, {...ad, [field_name]: value})
+
       return {
         ...ad,
         [field_name]: value,
-        name_ads_account
+        name_ads_account: new_name_ads_account,
+        template_adset_name: new_template_adset_name
       }
     })
     const newTarget: any = {...target}
