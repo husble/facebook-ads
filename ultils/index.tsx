@@ -122,47 +122,6 @@ export type TemplateAdCopy = {
   message: string;
 }
 
-export const FLEXIABLE_OPTIONS = [
-  {
-    label: "No",
-    value: ""
-  },
-  {
-    label: "Interests",
-    options: [
-      {
-        label: "Dogs (animals)",
-        value: "interests=6003332344237=Dogs",
-      },
-      {
-        label: "Cats (animals)",
-        value: "interests=6003159378782=Cats",
-      },
-      {
-        label: "Family (social concept)",
-        value: "interests=6003476182657=Family",
-      }
-    ]
-  },
-  {
-    label: "Realationship statuses",
-    options: [
-      {
-        label: "Single",
-        value: "relationship_statuses=1=Single",
-      },
-      {
-        label: "In relationship",
-        value: "relationship_statuses=2=In relationship"
-      },
-      {
-        label: "Married",
-        value: "relationship_statuses=3=Married",
-      },
-    ]
-  }
-]
-
 export const STORES: any = {
   200: "PAW",
   227: "TC",

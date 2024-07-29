@@ -208,3 +208,19 @@ export const UPDATE_FB_PIXEL = gql`
     }
   }
 `
+
+export const UPSERT_CONFIG = gql`
+  mutation insert_configs_one(
+    $object: configs_insert_input!
+  ) {
+    insert_configs_one(
+      object: $object
+      on_conflict: {
+        constraint: configs_pkey
+        update_columns: [data, code]
+      }
+    ) {
+      data
+    }
+  }
+`
