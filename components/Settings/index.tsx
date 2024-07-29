@@ -6,6 +6,7 @@ import React, { useState } from 'react';
 import ProductType from '#/components/Settings/ProductType';
 import Pixels from '#/components/Settings/Pixels';
 import AdCopy from '#/components/Settings/AdCopy';
+import Target from '#/components/Settings/Target';
 
 type ModalProps = {
   open: boolean;
@@ -22,6 +23,7 @@ function Index({ open, setOpen }: ModalProps) {
     { title: 'Product Type', components: <ProductType /> },
     { title: 'Template Ad Copy', components: <AdCopy /> },
     { title: 'Pixels', components: <Pixels /> },
+    { title: 'Target', components: <Target /> },
   ]);
 
   return (

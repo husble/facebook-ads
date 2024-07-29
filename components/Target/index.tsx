@@ -1,12 +1,54 @@
-import { COUNTRIES, FLEXIABLE_OPTIONS, GENDERS, Product, TARGET, createAgeOptions } from '#/ultils'
+import { GET_CONFIG } from '#/graphql/query'
+import { COUNTRIES, GENDERS, Product, TARGET, createAgeOptions } from '#/ultils'
+import { useQuery } from '@apollo/client'
 import { InputNumber, Radio, Select } from 'antd'
-import React from 'react'
+import React, { useState } from 'react'
+import { CONFIG, DATA_VALUE, TYPE_TARGET } from '../Settings/Target/type'
 
 const {Option} = Select
 
 const AGES = createAgeOptions()
 
 function Index({record, handleChooseSelect, is_all}: {record: Product | TARGET, handleChooseSelect: Function, is_all: boolean}) {
+  const [targets, setTarget] = useState<any[]>([])
+  useQuery(GET_CONFIG, {
+    variables: {
+      type: {
+        _eq: TYPE_TARGET
+      }
+    },
+    onCompleted: ({configs}: {configs: CONFIG[]}) => {
+      const results = []
+
+      function createOptions(values: DATA_VALUE[], code: string) {
+        return values.map(value => {
+          const {id, key, label} = value
+
+          return {
+            label,
+            value: `${code.toLowerCase().replaceAll(" ", "_")}=${id}=${key}`
+          }
+        })
+      }
+
+      for (const config of configs) {
+        const {code, data} = config
+        const {value} = data
+        if (typeof value === "string") {
+          results.push({
+            label: code,
+            value
+          })
+        } else {
+          results.push({
+            label: code,
+            options: createOptions(value, code)
+          })
+        }
+      }
+      setTarget(results)
+    }
+  })
   return (
     <div className='flex items-center flex-wrap gap-2'>
       <div className='flex items-center gap-1'>
@@ -71,7 +113,7 @@ function Index({record, handleChooseSelect, is_all}: {record: Product | TARGET, 
         <Select
           key={Math.random()}
           style={{width: 200}}
-          options={FLEXIABLE_OPTIONS}
+          options={targets}
           value={record.flexiable}
           onChange={(value) => handleChooseSelect({value, record, field_name: "flexiable", is_all})}
         />

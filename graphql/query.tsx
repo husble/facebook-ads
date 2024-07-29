@@ -358,3 +358,16 @@ export const GET_ACCOUNTS = gql`
     }
   }
 `
+
+export const GET_CONFIG = gql`
+  query configs(
+    $where: configs_bool_exp
+  ) {
+    configs(where: $where) {
+      code
+      data
+      id
+      type
+    }
+  }
+`
