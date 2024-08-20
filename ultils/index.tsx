@@ -90,6 +90,7 @@ export type Product = {
   flexiable: string;
   is_clone: boolean;
   template_adset_name: string;
+  tab: string;
 };
 
 export type TARGET = {
