@@ -44,12 +44,12 @@ interface PayloadAdsetName {
 }
 
 interface PayloadAdName extends PayloadAdsetName {
-  is_clone: boolean;
   name_ads_account: string;
   template_adset_name: string;
+  tab: string;
 }
 
-const CLONE_LABEL = "-Clone"
+const TAG_LABEL = ["Clone", "New", "Trend", "Scale"]
 
 const createAdSetName = (payload: PayloadAdsetName): string => {
   const {countries, age_max, age_min, gender} = payload
@@ -219,6 +219,18 @@ function Index({ open, setOpen, ads, storeId, setSelecteds }: Props) {
     setIsCreateCamp(true)
   }
 
+  function resetTabInAdsAccountName(tab: string, name_ads_account: string): string {
+    if (!tab) return name_ads_account
+
+    return name_ads_account.replace(`-${tab}`, "")
+  }
+
+  function replaceTabInAdsAccountName(tab: string, name_ads_account: string): string {
+    if (!tab) return name_ads_account
+
+    return name_ads_account + "-" + tab
+  }
+
   useEffect(() => {
     async function mappingData() {
       setLoading(true);
@@ -231,11 +243,11 @@ function Index({ open, setOpen, ads, storeId, setSelecteds }: Props) {
         const date = `0${new Date().getDate()}`.slice(-2);
         const month = `0${new Date().getMonth() + 1}`.slice(-2);
         const year = `${new Date().getFullYear()}`.slice(-2);
-        const is_clone = name_ads_account.indexOf(CLONE_LABEL) !== -1
-        let new_name_ads_account: string = name_ads_account.replace(
+        const tab = TAG_LABEL.find(label => name_ads_account.indexOf(`-${label}`) !== -1) || ""
+        let new_name_ads_account: string = resetTabInAdsAccountName(tab, name_ads_account.replace(
           '*',
           `${date}-${month}-${year}`
-        ).replace(CLONE_LABEL, "")
+        ))
         switch (templateType) {
           case "image":
             new_name_ads_account = new_name_ads_account.replace(/G00|G02/gi, 'G01') + "-Published Ads"
@@ -265,9 +277,9 @@ function Index({ open, setOpen, ads, storeId, setSelecteds }: Props) {
           new_name_ads_account = new_name_ads_account.replace("**", name_user.current)
         }
         const store_name = ad.store_2.shop
-        const payLoadAdset = createPayloadAdset({...ad, is_clone, name_ads_account: new_name_ads_account})
+        const payLoadAdset = createPayloadAdset({...ad, name_ads_account: new_name_ads_account})
         const template_adset_name = createAdSetName(payLoadAdset)
-        new_name_ads_account = updateNameAd({...payLoadAdset, is_clone, name_ads_account: new_name_ads_account, template_adset_name})
+        new_name_ads_account = updateNameAd({...payLoadAdset, name_ads_account: new_name_ads_account, template_adset_name, tab})
         results.push({
           ...ad,
           key: ad.product_id,
@@ -282,7 +294,7 @@ function Index({ open, setOpen, ads, storeId, setSelecteds }: Props) {
           countries: target.countries,
           ad_set_daily_budget: target.ad_set_daily_budget,
           flexiable: target.flexiable,
-          is_clone
+          tab
         });
 
         expendRows.push(ad.product_id)
@@ -786,15 +798,15 @@ function Index({ open, setOpen, ads, storeId, setSelecteds }: Props) {
   }
 
   const updateNameAd = (payload: PayloadAdName): string => {
-    const {countries, name_ads_account, age_max, age_min, gender, is_clone, template_adset_name} = payload
-    let new_name = name_ads_account.replace(CLONE_LABEL, "").replace(`-${template_adset_name}`, "")
+    const {countries, name_ads_account, age_max, age_min, gender, template_adset_name, tab} = payload
+    let new_name = resetTabInAdsAccountName(tab, name_ads_account).replace(`-${template_adset_name}`, "")
     new_name = createNameAdWhenChangeCountries(countries, new_name) + "-" + createAdSetName({countries, age_max, age_min, gender})
-    new_name = is_clone ? new_name + CLONE_LABEL : new_name
+    new_name = replaceTabInAdsAccountName(tab, new_name)
     return new_name
   }
 
   const handleChangeFieldOfAdset = (field_name: string, ad: Product) => {
-    const {name_ads_account, is_clone, template_adset_name} = ad
+    const {name_ads_account, template_adset_name, tab} = ad
     let new_name_ads_account = name_ads_account
     let new_template_adset_name = template_adset_name
     switch (field_name) {
@@ -803,7 +815,7 @@ function Index({ open, setOpen, ads, storeId, setSelecteds }: Props) {
       case "age_min":
       case "age_max":
         const payload = createPayloadAdset(ad)
-        new_name_ads_account = updateNameAd({...payload, is_clone, name_ads_account, template_adset_name})
+        new_name_ads_account = updateNameAd({...payload, name_ads_account, template_adset_name, tab})
         new_template_adset_name = createAdSetName(payload)
 
       default: return {
