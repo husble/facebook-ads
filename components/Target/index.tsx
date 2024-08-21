@@ -13,8 +13,10 @@ function Index({record, handleChooseSelect, is_all}: {record: Product | TARGET, 
   const [targets, setTarget] = useState<any[]>([])
   useQuery(GET_CONFIG, {
     variables: {
-      type: {
-        _eq: TYPE_TARGET
+      where: {
+        type: {
+          _eq: TYPE_TARGET
+        }
       }
     },
     onCompleted: ({configs}: {configs: CONFIG[]}) => {
