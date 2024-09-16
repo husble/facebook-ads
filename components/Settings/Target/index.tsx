@@ -114,6 +114,9 @@ function Index() {
         dataSource={configs}
         columns={columns}
         rowKey={"id"}
+        scroll={{
+          y: 'calc(100vh - 200px)'
+        }}
       />
       <UpdateTarget refetch={refetch} ref={ref} />
     </div>
