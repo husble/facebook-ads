@@ -64,6 +64,9 @@ function Index() {
         columns={columns}
         dataSource={pixels}
         pagination={false}
+        scroll={{
+          y: 'calc(100vh - 200px)'
+        }}
       />
     </div>
   )
