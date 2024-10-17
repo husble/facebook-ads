@@ -64,6 +64,7 @@ export type Product = {
   name_ads_account: string;
   vendor: string;
   product_ads_tags: Tag[];
+  tags: string;
   pr: string;
   link: string;
   product_type: string;
@@ -91,6 +92,7 @@ export type Product = {
   is_clone: boolean;
   template_adset_name: string;
   tab: string;
+  video_record_id?: string;
 };
 
 export type TARGET = {

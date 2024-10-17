@@ -1,5 +1,5 @@
-import { Button, Drawer, Input, Select, Switch, Table, Tooltip, message } from 'antd';
-import React, { ChangeEvent, useEffect, useRef, useState } from 'react';
+import { Badge, Button, Drawer, Input, Select, Switch, Table, Tooltip, message } from 'antd';
+import React, { ChangeEvent, useCallback, useEffect, useRef, useState } from 'react';
 import debounce from 'lodash.debounce';
 import * as XLSX from 'xlsx';
 import * as FileSaver from 'file-saver';
@@ -248,6 +248,7 @@ function Index({ open, setOpen, ads, storeId, setSelecteds }: Props) {
           '*',
           `${date}-${month}-${year}`
         ))
+        let data_video = {}
         switch (templateType) {
           case "image":
             new_name_ads_account = new_name_ads_account.replace(/G00|G02/gi, 'G01') + "-Published Ads"
@@ -259,10 +260,12 @@ function Index({ open, setOpen, ads, storeId, setSelecteds }: Props) {
   
           case "video":
             new_name_ads_account = new_name_ads_account.replace(/G00|G01/gi, 'G02') + "-Published Ads"
+            data_video = await getVideoByRecordId(ad)
             break
   
           case "creative_video":
             new_name_ads_account = new_name_ads_account.replace(/G00|G01/gi, 'G02') + "-Created Ads"
+            data_video = await getVideoByRecordId(ad)
             break
   
           default: break
@@ -294,7 +297,8 @@ function Index({ open, setOpen, ads, storeId, setSelecteds }: Props) {
           countries: target.countries,
           ad_set_daily_budget: target.ad_set_daily_budget,
           flexiable: target.flexiable,
-          tab
+          tab,
+          ...data_video
         });
 
         expendRows.push(ad.product_id)
@@ -402,18 +406,33 @@ function Index({ open, setOpen, ads, storeId, setSelecteds }: Props) {
       dataIndex: 'title',
       width: 350,
       render: (title: string, row: Product) => {
+        const no_video_url = !row["video_url"] && templateType.indexOf("video") !== -1
         return (
-          <div className='d-flex items-center gap-2'>
-            <Image
-              src={row.image_url}
-              alt='image'
-              width={80}
-              height={80}
-            />
-            <a target="_blank" href={`${row.link}`}>
-              {title}
-            </a>
-          </div>
+          no_video_url ? <Badge.Ribbon color='red' placement='start' text="No Video">
+            <div className='d-flex items-center gap-2'>
+              <Image
+                src={row.image_url}
+                alt='image'
+                width={80}
+                height={80}
+              />
+              <a target="_blank" href={`${row.link}`}>
+                {title}
+              </a>
+            </div>
+          </Badge.Ribbon> : (
+            <div className='d-flex items-center gap-2'>
+              <Image
+                src={row.image_url}
+                alt='image'
+                width={80}
+                height={80}
+              />
+              <a target="_blank" href={`${row.link}`}>
+                {title}
+              </a>
+            </div>
+          )
         );
       }
     },
@@ -540,11 +559,35 @@ function Index({ open, setOpen, ads, storeId, setSelecteds }: Props) {
     }
   };
 
-  const handleChangeTemplateType = (type: string) => {
-    const newDatas = adsPreview.map((ad: Product) => {
+  async function getVideoByRecordId(ad: Product) {
+    const {tags, video_url, video_record_id} = ad
+    if (video_url) return {
+      video_url,
+      video_record_id: ""
+    }
+    function getRecordId() {
+      const list_tags = tags.split(", ")
+      for (const tag of list_tags) {
+        if (/^rec[A-Za-z0-9]+$/.test(tag)) return tag
+      }
+
+      return null
+    }
+    const record_id = video_record_id || getRecordId()
+
+    const new_video_url = await getLinkVideoByRecordID(record_id)
+    return {
+      video_url: new_video_url,
+      video_record_id: record_id
+    }
+  } 
+
+  const handleChangeTemplateType = async (type: string) => {
+    setLoading(true)
+    const newDatas = adsPreview.map(async (ad: Product) => {
       const { name_ads_account } = ad;
       let new_name_ads_account = name_ads_account;
-
+      let data_video = {}
       switch (type) {
         case "image":
           new_name_ads_account = new_name_ads_account.replace(/G00|G02/gi, 'G01').replace(/Created Ads|Published Ads/gi, "Published Ads")
@@ -556,10 +599,12 @@ function Index({ open, setOpen, ads, storeId, setSelecteds }: Props) {
 
         case "video":
           new_name_ads_account = new_name_ads_account.replace(/G00|G01/gi, 'G02').replace(/Created Ads|Published Ads/gi, "Published Ads")
+          data_video = await getVideoByRecordId(ad)
           break
 
         case "creative_video":
           new_name_ads_account = new_name_ads_account.replace(/G00|G01/gi, 'G02').replace(/Created Ads|Published Ads/gi, "Created Ads")
+          data_video = await getVideoByRecordId(ad)
           break
 
         default: break
@@ -567,13 +612,16 @@ function Index({ open, setOpen, ads, storeId, setSelecteds }: Props) {
       return {
         ...ad,
         name_ads_account: new_name_ads_account,
-        template_type: type
+        template_type: type,
+        ...data_video
       };
     });
 
+    const newAdsPreview = await Promise.all(newDatas)
     setProductType(type);
-    setAdsPreview(newDatas);
-    checkFulFillDataCreateCamp(newDatas, type)
+    setAdsPreview(newAdsPreview);
+    checkFulFillDataCreateCamp(newAdsPreview, type)
+    setLoading(false)
   };
 
   const chooseAccount = (value: string) => {
@@ -671,46 +719,73 @@ function Index({ open, setOpen, ads, storeId, setSelecteds }: Props) {
     }
   };
 
+  const getLinkVideoByRecordID = async (record_id: string | null) => {
+    if (!record_id) return ""
+
+    const res = await fetch(`https://spy.husble.com/api/video?record=${record_id}`)
+    const data = await res.json()
+    if (!data || data.length === 0) return null
+
+    return data[0]
+  }
+
   const handleChangeImageUrl = debounce((e: ChangeEvent<HTMLInputElement>, record: Product, thumbnail?: boolean) => {
     const { key } = record;
+    const {value} = e.target
     const currentDatas: any = [...adsPreview];
     const findIndex = currentDatas.findIndex(
       (data: Product) => data.key === key
     );
-
     switch (templateType) {
       case "image":
       case "creative_image":
         currentDatas[findIndex] = {
           ...currentDatas[findIndex],
-          image_url: e.target.value
+          image_url: value
         };
         break
 
       case "video":
-        currentDatas[findIndex] = {
-          ...currentDatas[findIndex],
-          video_url: e.target.value
-        };
+        if (/https:\/\//.test(value)) {
+          currentDatas[findIndex] = {
+            ...currentDatas[findIndex],
+            video_url: value,
+            video_record_id: ""
+          };
+        } else {
+          currentDatas[findIndex] = {
+            ...currentDatas[findIndex],
+            video_record_id: value,
+            video_url: ""
+          };
+        }
         break
 
       case "creative_video":
         if (thumbnail) {
           currentDatas[findIndex] = {
             ...currentDatas[findIndex],
-            image_url: e.target.value
+            image_url: value
           };
         } else {
-          currentDatas[findIndex] = {
-            ...currentDatas[findIndex],
-            video_url: e.target.value
-          };
+          if (/https:\/\//.test(value)) {
+            currentDatas[findIndex] = {
+              ...currentDatas[findIndex],
+              video_url: value,
+              video_record_id: ""
+            };
+          } else {
+            currentDatas[findIndex] = {
+              ...currentDatas[findIndex],
+              video_record_id: value,
+              video_url: ""
+            };
+          }
         }
         break
 
       default: break
     }
-
     setAdsPreview(currentDatas);
   }, 1000)
 
@@ -729,6 +804,38 @@ function Index({ open, setOpen, ads, storeId, setSelecteds }: Props) {
     setAdsPreview(currentDatas);
   }
 
+  const updateVideoUrlRecord = async (video_record_id: string, record: Product) => {
+    try {
+      setLoading(true)
+      const video_url = await getLinkVideoByRecordID(video_record_id)
+      const currentDatas = [...adsPreview]
+      const {key} = record
+      const findIndex = currentDatas.findIndex(
+        (data: Product) => data.key === key
+      );
+  
+      currentDatas[findIndex] = {
+        ...currentDatas[findIndex],
+        video_url
+      }
+      setAdsPreview(currentDatas);
+      setLoading(false)
+    } catch (error) {
+      message.error("Error when trying get video url")
+      setLoading(false)
+    }
+  }
+
+  const viewVideo = (video_url: string | undefined, video_record_id: string | undefined) => {
+    if (!video_url) return
+    if (!video_record_id) {
+      window.open(video_url, "_blank")
+      return
+    }
+    const [_, video_id] = video_url.split("=download&id=")
+    window.open(`https://drive.google.com/file/d/${video_id}/view`, "_blank")
+  }
+
   const renderCreatePost = () => {
     if (templateType.indexOf("creative") !== -1) return null
 
@@ -738,6 +845,13 @@ function Index({ open, setOpen, ads, storeId, setSelecteds }: Props) {
       </Button>
     )
   }
+
+  const renderBtnActionVideo = (record: Product) => (
+    <div style={{display: "flex", gap: 10, marginTop: 10}}>
+      {record["video_record_id"] ? <Button type='primary' size='small' onClick={() => updateVideoUrlRecord(record["video_record_id"] || "", record)}>Get Link Video</Button>: null}
+      {record["video_url"] ? <Button type='primary' size='small' onClick={() => viewVideo(record["video_url"], record["video_record_id"])}>View</Button> : null}
+    </div>
+  )
 
   const renderCampType = (record: Product) => {
     switch (templateType) {
@@ -762,9 +876,11 @@ function Index({ open, setOpen, ads, storeId, setSelecteds }: Props) {
             <Input
               onChange={(e) => handleChangeImageUrl(e, record)}
               style={{width: '90%'}}
-              defaultValue={record.video_url}
+              defaultValue={record.video_record_id || record.video_url}
               key={record.video_url}
+              placeholder='input video url or record_id'
             />
+            {renderBtnActionVideo(record)}
           </div> 
         )
       case "creative_video":
@@ -785,10 +901,11 @@ function Index({ open, setOpen, ads, storeId, setSelecteds }: Props) {
               <Input
                 onChange={(e) => handleChangeImageUrl(e, record, false)}
                 style={{width: '90%'}}
-                defaultValue={record.video_url}
+                defaultValue={record.video_record_id || record.video_url}
                 key={record.video_url}
-                placeholder='Video url'
+                placeholder='input video url or record_id'
               />
+              {renderBtnActionVideo(record)}
             </div>
           </div> 
         )
@@ -921,6 +1038,34 @@ function Index({ open, setOpen, ads, storeId, setSelecteds }: Props) {
     }
     setExpendRows(newExpendRows)
   }
+
+  const renderBtnGetAllVideo = useCallback(() => {
+    if (templateType.indexOf("video") === -1) return
+
+    async function gettAllVideo() {
+      try {
+        setLoading(true)
+        const dataPromises = adsPreview.map(ad => {
+          return getVideoByRecordId(ad)
+        })
+  
+        const resultPromises = await Promise.all(dataPromises)
+        const currentDatas = adsPreview.map((ad, index) => ({
+          ...ad,
+          video_url: resultPromises[index]['video_url'],
+          video_record_id: resultPromises[index]['video_record_id'] || ""
+        }))
+        setLoading(false)
+        setAdsPreview(currentDatas)
+      } catch (error) {
+        message.error("Error when trying get video url")
+        setLoading(false)
+      }
+    }
+    return (
+      <Button onClick={gettAllVideo} size='small' type='primary'>Get All Video</Button>
+    )
+  }, [adsPreview])
   return (
     <Styled>
       <Drawer
@@ -998,7 +1143,10 @@ function Index({ open, setOpen, ads, storeId, setSelecteds }: Props) {
               </Button>
             </div>
           </div>
-          <Switch checked={showAll} onChange={changeShowAll} unCheckedChildren='Show all' checkedChildren='Show all' />
+          <div style={{display: "flex", gap: 10, marginTop: 10}}>
+            <Switch checked={showAll} onChange={changeShowAll} unCheckedChildren='Show All' checkedChildren='Show All' />
+            {renderBtnGetAllVideo()}
+          </div>
         </div>
         <Table
           loading={loading}
@@ -1011,7 +1159,7 @@ function Index({ open, setOpen, ads, storeId, setSelecteds }: Props) {
           className='table_step2'
           expandable={{
             expandedRowRender: (record) => (
-              <ul key={record.title} className='camp_list_items'>
+              <ul key={record.title} className={`camp_list_items`}>
                 <li>
                   <div className='camp_target flex items-center gap-2 flex-wrap'>
                     <Select

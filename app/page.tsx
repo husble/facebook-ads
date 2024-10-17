@@ -15,6 +15,7 @@ import withAuth from '#/ultils/withAuth';
 import ModalImage from '#/components/ShowImage';
 import Filter from '#/components/Filter';
 import { UserContext } from '#/components/UserContext';
+import { Product } from '#/ultils';
 
 const LIMIT = 25;
 
@@ -23,27 +24,6 @@ type STORE = {
   shop: String;
   timezone: String;
   name: String;
-};
-
-type Product = {
-  store_id: String;
-  product_id: String;
-  handle: String;
-  title: String;
-  name_ads_account: String;
-  vendor: String;
-  pr: String;
-  link: String;
-  product_type: String;
-  image_url: String;
-  key: number;
-  template_name?: string;
-  template_type?: string;
-  template_user?: string;
-  template_account?: string;
-  created_at_string: string;
-  image_video?: string;
-  link_object_id?: string;
 };
 
 type ProductType = {
