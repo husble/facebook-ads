@@ -39,10 +39,13 @@ function Home() {
   const [loading, setLoading] = useState<boolean>(false);
   const [image_url, setImageUrl] = useState<string>('');
   const [productTypes, setProductTypes] = useState<ProductType[]>([]);
+  const [seachValue, setSearchValue] = useState<string>("")
+  const [searchs, setSearch] = useState<string[]>([])
   const [openFilter, setOpenFilter] = useState<boolean>(false);
   const [paramsProductType, setParamsProductType] = useState<string>('');
   const [selecteds, setSelecteds] = useState<any[]>([]);
   const [page, setPage] = useState<number>(1);
+  const storeSearch = useRef<string[]>([])
   const [paramsCreatedAt, setParamsCreatedAt] = useState<
     Record<string, string>
   >({ _lte: '', _gte: '' });
@@ -167,28 +170,10 @@ function Home() {
   const handleSelectStore = (shop: String) => {
     const matchedStore = stores.find((s: STORE) => s.shop === shop);
 
-    // setLoading(true);
     if (matchedStore) {
       const storeId = matchedStore.id as number;
-      const new_queries: any = {
-        ...queries.current,
-        where: {
-          _and: {
-            ...queries.current.where._and,
-            store_id: {
-              _eq: storeId
-            }
-          }
-        },
-        offset: 0,
-        limit: LIMIT
-      };
-
       storeRef.current = storeId;
-
-      queries.current = new_queries;
-
-      handleGetNewData();
+      handleFilterAds()
 
       // setLoading(false);
     } else {
@@ -208,49 +193,42 @@ function Home() {
     preserveSelectedRowKeys: true,
     selectedRowKeys: selecteds.map(slect => slect.product_id)
   };
-
-  const handleFilterAds = debounce((e: ChangeEvent<HTMLInputElement>) => {
-    const value = e?.target?.value;
+  function handleFilterAds() {
     setLoading(true);
-
-    const params: any = [];
-
-    if (value) {
-      ['title', 'pr', 'name_ads_account', 'tags'].map((s: string) => {
-        params.push({
+    const params: any = {};
+    const datas = storeSearch.current.map(search => {
+      const a = ['title', 'pr', 'name_ads_account', 'tags'].map((s: string) => {
+        return ({
           [s]: {
-            _ilike: `%${value}%`
+            _iregex: `${search}`
           }
         });
       });
-    }
-
-    if (paramsProductType || value) {
-      params.push({
-        product_type: {
-          _ilike: `%${paramsProductType ? paramsProductType : value}%`
-        }
-      });
+      return {
+        _or: a
+      }
+    })
+    if (paramsProductType) {
+      params.product_type = {
+        _ilike: `%${paramsProductType}%`
+      }
     }
 
     if (paramsCreatedAt['_lte']) {
-      params.push({
-        created_at_string: {
-          _lte: moment(paramsCreatedAt['_lte']).toISOString(true),
-          _gte: moment(paramsCreatedAt['_gte']).toISOString(true)
-        }
-      });
+      params.created_at_string = {
+        _lte: moment(paramsCreatedAt['_lte']).toISOString(true),
+        _gte: moment(paramsCreatedAt['_gte']).toISOString(true)
+      }
     }
-
     const new_queries: any = {
       ...queries.current,
       where: {
-        _and: {
-          store_id: {
-            _eq: storeRef.current
-          },
-          _or: params[0] ? [...params] : [{ title: { _ilike: '%%' } }]
-        }
+        store_id: {
+          _eq: storeRef.current
+        },
+        _and: datas,
+        ...params
+        // _or: params[0] ? [...params] : [{ title: { _ilike: '%%' } }]
       },
       offset: 0,
       limit: LIMIT
@@ -259,7 +237,18 @@ function Home() {
     queries.current = new_queries;
     setPage(1);
     handleGetNewData();
-  }, 300);
+  }
+
+  const onSearch = (value: string) => {
+    if (!value) return
+
+    const newSearchs = [...searchs]
+    newSearchs.push(value)
+    storeSearch.current = newSearchs
+    handleFilterAds()
+    setSearch(newSearchs)
+    setSearchValue("")
+  }
 
   const handleChangePge = (page: number) => {
     setLoading(true);
@@ -273,6 +262,20 @@ function Home() {
     setPage(page);
   };
 
+  const changeSearch = (e: ChangeEvent<HTMLInputElement>) => {
+    const {value} = e.target
+    setSearchValue(value)
+  }
+
+  const removeSearch = (seachValue: string) => {
+    const newSearch = [...searchs]
+    const findIndex = searchs.findIndex(search => search === seachValue)
+    newSearch.splice(findIndex, 1)
+    storeSearch.current = newSearch
+    handleFilterAds()
+    setSearch(newSearch)
+  }
+
   return (
     <div>
       <header className="sticky top-0 z-50 py-4 px-5 shadow-shadow-section bg-white flex justify-between flex-wrap">
@@ -284,11 +287,13 @@ function Home() {
             label: store.shop
           }))}
         />
-        <Input
+        <Input.Search
           allowClear
           className="w-[400px] inline-block"
           style={{ width: '400px !important' }}
-          onChange={handleFilterAds}
+          onSearch={onSearch}
+          value={seachValue}
+          onChange={changeSearch}
         />
         <div>
           <Button
@@ -315,6 +320,14 @@ function Home() {
           </span>
         </div>
       </header>
+      <div className='py-4 px-5 sticky top-20 z-50 bg-white'>
+        {searchs.map(search => (
+          <span className='bg-black text-white px-3 py-1 rounded mr-2'>
+            <span>{search}</span>
+            <span onClick={() => removeSearch(search)} className='ml-2 cursor-pointer'>x</span>
+          </span>
+        ))}
+      </div>
       <main>
         {selecteds.length ? (
           <div className="px-5">
