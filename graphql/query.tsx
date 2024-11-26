@@ -29,6 +29,7 @@ export const GET_PRODUCT_ADS = gql`
       tags
       key: product_id
       created_at_string
+      is_video
       store_2 {
         shop
       }
