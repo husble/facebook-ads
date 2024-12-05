@@ -407,28 +407,29 @@ function Index({ open, setOpen, ads, storeId, setSelecteds }: Props) {
       width: 350,
       render: (title: string, row: Product) => {
         const no_video_url = !row["video_url"] && templateType.indexOf("video") !== -1
+        const {image_url, link} = row
         return (
           no_video_url ? <Badge.Ribbon color='red' placement='start' text="No Video">
             <div className='d-flex items-center gap-2'>
-              <Image
-                src={row.image_url}
+              {(image_url && image_url.indexOf("http") !== -1) ? <Image
+                src={image_url}
                 alt='image'
                 width={80}
                 height={80}
-              />
-              <a target="_blank" href={`${row.link}`}>
+              /> : null}
+              <a target="_blank" href={`${link}`}>
                 {title}
               </a>
             </div>
           </Badge.Ribbon> : (
             <div className='d-flex items-center gap-2'>
-              <Image
-                src={row.image_url}
+              {(image_url && image_url.indexOf("http") !== -1) ? <Image
+                src={image_url}
                 alt='image'
                 width={80}
                 height={80}
-              />
-              <a target="_blank" href={`${row.link}`}>
+              /> : null}
+              <a target="_blank" href={`${link}`}>
                 {title}
               </a>
             </div>
