@@ -830,7 +830,12 @@ function Index({ open, setOpen, ads, storeId, setSelecteds }: Props) {
   const viewVideo = (video_url: string | undefined, video_record_id: string | undefined) => {
     if (!video_url) return
     if (!video_record_id) {
-      window.open(video_url, "_blank")
+      if (video_url.indexOf("=download&id=")) {
+        const [_, video_id] = video_url.split("=download&id=")
+        window.open(`https://drive.google.com/file/d/${video_id}/view`, "_blank")
+      } else {
+        window.open(video_url, "_blank")
+      }
       return
     }
     const [_, video_id] = video_url.split("=download&id=")

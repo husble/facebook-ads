@@ -1,7 +1,7 @@
 'use client';
 
 import { useLazyQuery, useQuery } from '@apollo/client';
-import { Button, Input, Select, Table, Tag } from 'antd';
+import { Button, Checkbox, Input, Select, Table, Tag } from 'antd';
 import { ChangeEvent, Key, useContext, useEffect, useRef, useState } from 'react';
 import Image from 'next/image';
 import debounce from 'lodash.debounce';
@@ -16,6 +16,7 @@ import ModalImage from '#/components/ShowImage';
 import Filter from '#/components/Filter';
 import { UserContext } from '#/components/UserContext';
 import { Product } from '#/ultils';
+import { CheckboxChangeEvent } from 'antd/es/checkbox';
 
 const LIMIT = 25;
 
@@ -46,6 +47,7 @@ function Home() {
   const [selecteds, setSelecteds] = useState<any[]>([]);
   const [page, setPage] = useState<number>(1);
   const storeSearch = useRef<string[]>([])
+  const isVideo = useRef<boolean>(false)
   const [paramsCreatedAt, setParamsCreatedAt] = useState<
     Record<string, string>
   >({ _lte: '', _gte: '' });
@@ -93,6 +95,13 @@ function Home() {
   const handleShowImage = (image_url: string) => {
     setImageUrl(image_url);
   };
+
+  const chooseVideo = (e: CheckboxChangeEvent) => {
+    const {checked} = e.target
+    isVideo.current = checked
+
+    handleFilterAds()
+  }
 
   const columns = [
     {
@@ -143,7 +152,7 @@ function Home() {
       render: (pr: String) => <Tag color="red">{pr}</Tag>
     },
     {
-      title: 'Video',
+      title: <Checkbox onChange={chooseVideo}>Video</Checkbox>,
       key: 'is_video',
       dataIndex: 'is_video',
       render: (is_video: boolean) => {
@@ -229,6 +238,13 @@ function Home() {
         _gte: moment(paramsCreatedAt['_gte']).toISOString(true)
       }
     }
+
+    if (isVideo.current) {
+      params.is_video = {
+        _eq: true
+      }
+    }
+
     const new_queries: any = {
       ...queries.current,
       where: {
