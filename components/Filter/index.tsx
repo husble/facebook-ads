@@ -71,7 +71,7 @@ const App = ({
           className="my-3"
           style={{ width: '100%' }}
           showSearch
-          placeholder="Select a person"
+          placeholder="Select a product type"
           optionFilterProp="children"
           onChange={onChange}
           onSearch={onSearch}
