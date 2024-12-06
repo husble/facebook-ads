@@ -143,6 +143,15 @@ function Home() {
       render: (pr: String) => <Tag color="red">{pr}</Tag>
     },
     {
+      title: 'Video',
+      key: 'is_video',
+      dataIndex: 'is_video',
+      render: (is_video: boolean) => {
+        if (!is_video) return null;
+        return <Tag color="green">Video</Tag>;
+      }
+    },
+    {
       title: 'Tags',
       key: 'tags',
       dataIndex: 'tags',
