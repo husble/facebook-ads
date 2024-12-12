@@ -19,7 +19,7 @@ import Target from "#/components/Target"
 
 import Styled from "./Style"
 import Image from 'next/image';
-import { isArray } from '@apollo/client/utilities';
+import Video from '#/components/Video'
 
 const {Option} = Select
 
@@ -576,10 +576,11 @@ function Index({ open, setOpen, ads, storeId, setSelecteds }: Props) {
     }
     const record_id = video_record_id || getRecordId()
 
-    const new_video_url = await getLinkVideoByRecordID(record_id)
+    const {video_url: new_video_url, list_url} = await getLinkVideoByRecordID(record_id)
     return {
       video_url: new_video_url,
-      video_record_id: record_id
+      video_record_id: record_id,
+      list_url
     }
   } 
 
@@ -721,13 +722,22 @@ function Index({ open, setOpen, ads, storeId, setSelecteds }: Props) {
   };
 
   const getLinkVideoByRecordID = async (record_id: string | null) => {
-    if (!record_id) return ""
+    if (!record_id) return {
+      video_url: "",
+      list_url: []
+    }
 
     const res = await fetch(`https://spy.husble.com/api/video?record=${record_id}`)
     const data = await res.json()
-    if (!data || data.length === 0) return null
+    if (!data || data.length === 0) return {
+      video_url: "",
+      list_url: []
+    }
 
-    return data[0]
+    return {
+      video_url: data[0],
+      list_url: data
+    }
   }
 
   const handleChangeImageUrl = debounce((e: ChangeEvent<HTMLInputElement>, record: Product, thumbnail?: boolean) => {
@@ -808,7 +818,7 @@ function Index({ open, setOpen, ads, storeId, setSelecteds }: Props) {
   const updateVideoUrlRecord = async (video_record_id: string, record: Product) => {
     try {
       setLoading(true)
-      const video_url = await getLinkVideoByRecordID(video_record_id)
+      const {video_url, list_url} = await getLinkVideoByRecordID(video_record_id)
       const currentDatas = [...adsPreview]
       const {key} = record
       const findIndex = currentDatas.findIndex(
@@ -817,7 +827,8 @@ function Index({ open, setOpen, ads, storeId, setSelecteds }: Props) {
   
       currentDatas[findIndex] = {
         ...currentDatas[findIndex],
-        video_url
+        video_url,
+        list_url
       }
       setAdsPreview(currentDatas);
       setLoading(false)
@@ -852,12 +863,17 @@ function Index({ open, setOpen, ads, storeId, setSelecteds }: Props) {
     )
   }
 
-  const renderBtnActionVideo = (record: Product) => (
-    <div style={{display: "flex", gap: 10, marginTop: 10}}>
-      {record["video_record_id"] ? <Button type='primary' size='small' onClick={() => updateVideoUrlRecord(record["video_record_id"] || "", record)}>Get Link Video</Button>: null}
-      {record["video_url"] ? <Button type='primary' size='small' onClick={() => viewVideo(record["video_url"], record["video_record_id"])}>View</Button> : null}
-    </div>
-  )
+  const renderBtnActionVideo = (record: Product) => {
+    const {video_record_id, video_url, list_url} = record
+    return (
+      <div style={{display: "flex", gap: 10, marginTop: 10}}>
+        {video_record_id ? <Button type='primary' size='small' onClick={() => updateVideoUrlRecord(video_record_id || "", record)}>Get Link Video</Button>: null}
+        {video_url ? <Button type='primary' size='small' onClick={() => viewVideo(video_url, video_record_id)}>View</Button> : null}
+        
+        {list_url && list_url.length > 1 ? <Video record={record} adsPreview={adsPreview} setAdsPreview={setAdsPreview} urls={list_url || []} /> : null} 
+      </div>
+    )
+  }
 
   const renderCampType = (record: Product) => {
     switch (templateType) {
