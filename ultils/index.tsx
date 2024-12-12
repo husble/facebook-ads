@@ -93,6 +93,7 @@ export type Product = {
   template_adset_name: string;
   tab: string;
   video_record_id?: string;
+  list_url?: string[]
 };
 
 export type TARGET = {
