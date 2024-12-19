@@ -1,15 +1,15 @@
 import React, { useState } from 'react'
 import { Badge, Button, List, Modal, Tooltip } from 'antd'
 
-import { Product } from '#/ultils';
+import { addNameVideoCreator, getCreatorName, Product, VIDEO } from '#/ultils';
 
 type Props = {
-  urls: string[];
+  videos: VIDEO[];
   record: Product;
   adsPreview: Product[];
   setAdsPreview: Function;
 }
-function Index({urls, adsPreview, setAdsPreview, record}: Props) {
+function Index({videos, adsPreview, setAdsPreview, record}: Props) {
   const [visible, setVisiable] = useState<boolean>(false)
   const [videoUrl, setVideoUrl] = useState<string>("")
 
@@ -27,24 +27,29 @@ function Index({urls, adsPreview, setAdsPreview, record}: Props) {
     setVideoUrl(video_url)
   }
 
-  function chooseVideo(video_url: string) {
+  function chooseVideo(video: VIDEO) {
     const currentDatas = [...adsPreview]
-    const {key} = record
+    const {link, name} = video
+    const {key, name_ads_account, template_type, vc_name} = record
     const findIndex = currentDatas.findIndex(
       (data: Product) => data.key === key
     );
+    const new_vc_name = getCreatorName(name)
+
     currentDatas[findIndex] = {
       ...currentDatas[findIndex],
-      video_url,
+      video_url: link,
+      name_ads_account: addNameVideoCreator({old_vc_name: vc_name, vc_name: new_vc_name, name_ads_account, template_type}),
+      vc_name: new_vc_name
     }
     setAdsPreview(currentDatas);
-    setVideoUrl(video_url)
+    setVideoUrl(link)
     setVisiable(false)
   }
 
   return (
     <div>
-      <Badge count={urls.length}>
+      <Badge count={videos.length}>
         <Tooltip title="Click to choose another video">
           <Button onClick={() => setVisiable(true)} type='primary' size='small'>Video</Button>
         </Tooltip>
@@ -56,15 +61,15 @@ function Index({urls, adsPreview, setAdsPreview, record}: Props) {
         footer={null}
       >
         <div className='video_wrap' style={{display: "flex", gap: 20}}>
-          <iframe loading={"lazy"} src={`https://drive.google.com/file/d/${getVideoId(videoUrl || urls[0])}/preview`} width="640" height="360"></iframe>
+          <iframe loading={"lazy"} src={`https://drive.google.com/file/d/${getVideoId(videoUrl || videos[0]["link"])}/preview`} width="640" height="360"></iframe>
           <List
             itemLayout='horizontal'
-            dataSource={urls}
-            renderItem={url => (
+            dataSource={videos}
+            renderItem={video => (
               <List.Item>
                 <div>
                   <div style={{display: 'flex', gap: 10}}>
-                    {url === videoUrl ? <svg
+                    {video['link'] === videoUrl ? <svg
                       id="Layer_1"
                       xmlns="http://www.w3.org/2000/svg"
                       xmlnsXlink="http://www.w3.org/1999/xlink"
@@ -95,13 +100,16 @@ function Index({urls, adsPreview, setAdsPreview, record}: Props) {
                         d="M13.395 17.726L10.301 14.979L9.368 16.03L13.582 19.774L20.818 10.506L19.71 9.64Z"
                       />
                     </svg> : null}
-                    <a target="_blank" href={createVideoUrl(url)}>
-                      {url}
-                    </a>
+                    <div>
+                      <p style={{margin: 0}}><strong>{video["name"]}</strong></p>
+                      <a target="_blank" href={createVideoUrl(video['link'])}>
+                        {video['link']}
+                      </a>
+                    </div>
                   </div>
                   <div className='btn_action'>
-                    <Button onClick={() => viewVideo(url)} size='small' type='dashed'>View</Button>
-                    <Button onClick={() => chooseVideo(url)} style={{marginLeft: 10}} size='small' type='dashed'>Choose this video</Button>
+                    <Button onClick={() => viewVideo(video['link'])} size='small' type='dashed'>View</Button>
+                    <Button onClick={() => chooseVideo(video)} style={{marginLeft: 10}} size='small' type='dashed'>Choose this video</Button>
                   </div>
                 </div>
               </List.Item>
