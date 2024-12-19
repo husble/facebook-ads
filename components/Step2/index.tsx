@@ -12,7 +12,7 @@ import { ChromeOutlined, CopyTwoTone } from '@ant-design/icons';
 import TextArea from 'antd/es/input/TextArea';
 
 import FB from '#/app/api/fb';
-import {FbPixel, PAYLOAD_SELECT, Product, STORES, TARGET, TYPES} from '#/ultils';
+import {addNameVideoCreator, FbPixel, getCreatorName, PAYLOAD_SELECT, Product, STORES, TARGET, TYPES, VIDEO} from '#/ultils';
 import Client from '#/ultils/client';
 
 import Target from "#/components/Target"
@@ -47,6 +47,8 @@ interface PayloadAdName extends PayloadAdsetName {
   name_ads_account: string;
   template_adset_name: string;
   tab: string;
+  vc_name: string;
+  template_type?: string;
 }
 
 const TAG_LABEL = ["Clone", "New", "Trend", "Scale"]
@@ -239,7 +241,7 @@ function Index({ open, setOpen, ads, storeId, setSelecteds }: Props) {
       const expendRows = []
 
       for await (const ad of ads) {
-        const { name_ads_account } = ad;
+        const { name_ads_account, template_type } = ad;
         const date = `0${new Date().getDate()}`.slice(-2);
         const month = `0${new Date().getMonth() + 1}`.slice(-2);
         const year = `${new Date().getFullYear()}`.slice(-2);
@@ -248,7 +250,7 @@ function Index({ open, setOpen, ads, storeId, setSelecteds }: Props) {
           '*',
           `${date}-${month}-${year}`
         ))
-        let data_video = {}
+        let data_video: any
         switch (templateType) {
           case "image":
             new_name_ads_account = new_name_ads_account.replace(/G00|G02/gi, 'G01') + "-Published Ads"
@@ -282,7 +284,7 @@ function Index({ open, setOpen, ads, storeId, setSelecteds }: Props) {
         const store_name = ad.store_2.shop
         const payLoadAdset = createPayloadAdset({...ad, name_ads_account: new_name_ads_account})
         const template_adset_name = createAdSetName(payLoadAdset)
-        new_name_ads_account = updateNameAd({...payLoadAdset, name_ads_account: new_name_ads_account, template_adset_name, tab})
+        new_name_ads_account = updateNameAd({...payLoadAdset, name_ads_account: new_name_ads_account, template_adset_name, tab, vc_name: data_video?.vc_name, template_type: templateType})
         results.push({
           ...ad,
           key: ad.product_id,
@@ -561,10 +563,12 @@ function Index({ open, setOpen, ads, storeId, setSelecteds }: Props) {
   };
 
   async function getVideoByRecordId(ad: Product) {
-    const {tags, video_url, video_record_id} = ad
+    const {tags, video_url, video_record_id, vc_name: vc_name_data} = ad
     if (video_url) return {
       video_url,
-      video_record_id: ""
+      video_record_id: "",
+      vc_name: vc_name_data,
+      list_video: []
     }
     function getRecordId() {
       const list_tags = tags.split(", ")
@@ -576,20 +580,25 @@ function Index({ open, setOpen, ads, storeId, setSelecteds }: Props) {
     }
     const record_id = video_record_id || getRecordId()
 
-    const {video_url: new_video_url, list_url} = await getLinkVideoByRecordID(record_id)
+    const {video_url: new_video_url, list_video, vc_name} = await getLinkVideoByRecordID(record_id)
     return {
       video_url: new_video_url,
+      vc_name,
       video_record_id: record_id,
-      list_url
+      list_video
     }
   } 
 
   const handleChangeTemplateType = async (type: string) => {
     setLoading(true)
     const newDatas = adsPreview.map(async (ad: Product) => {
-      const { name_ads_account } = ad;
+      const { name_ads_account, vc_name } = ad;
       let new_name_ads_account = name_ads_account;
-      let data_video = {}
+      let data_video: any = {
+        vc_name: "",
+        video_url: "",
+        old_vc_name: vc_name
+      }
       switch (type) {
         case "image":
           new_name_ads_account = new_name_ads_account.replace(/G00|G02/gi, 'G01').replace(/Created Ads|Published Ads/gi, "Published Ads")
@@ -601,19 +610,19 @@ function Index({ open, setOpen, ads, storeId, setSelecteds }: Props) {
 
         case "video":
           new_name_ads_account = new_name_ads_account.replace(/G00|G01/gi, 'G02').replace(/Created Ads|Published Ads/gi, "Published Ads")
-          data_video = await getVideoByRecordId(ad)
+          data_video = await getVideoByRecordId({...ad, video_url: ""})
           break
 
         case "creative_video":
           new_name_ads_account = new_name_ads_account.replace(/G00|G01/gi, 'G02').replace(/Created Ads|Published Ads/gi, "Created Ads")
-          data_video = await getVideoByRecordId(ad)
+          data_video = await getVideoByRecordId({...ad, video_url: ""})
           break
 
         default: break
       }
       return {
         ...ad,
-        name_ads_account: new_name_ads_account,
+        name_ads_account: addNameVideoCreator({old_vc_name: vc_name, vc_name: data_video?.vc_name, name_ads_account: new_name_ads_account, template_type: type}),
         template_type: type,
         ...data_video
       };
@@ -721,22 +730,26 @@ function Index({ open, setOpen, ads, storeId, setSelecteds }: Props) {
     }
   };
 
+
   const getLinkVideoByRecordID = async (record_id: string | null) => {
     if (!record_id) return {
       video_url: "",
-      list_url: []
+      list_video: [],
+      vc_name: ""
     }
 
-    const res = await fetch(`https://spy.husble.com/api/video?record=${record_id}`)
-    const data = await res.json()
+    const res = await fetch(`https://spy.husble.com/api/video-v2?record=${record_id}`)
+    const data: VIDEO[] = await res.json()
+
     if (!data || data.length === 0) return {
       video_url: "",
-      list_url: []
+      list_video: [],
+      vc_name: ""
     }
-
     return {
-      video_url: data[0],
-      list_url: data
+      vc_name: getCreatorName(data[0]["name"]),
+      video_url: data[0]["link"],
+      list_video: data
     }
   }
 
@@ -818,7 +831,7 @@ function Index({ open, setOpen, ads, storeId, setSelecteds }: Props) {
   const updateVideoUrlRecord = async (video_record_id: string, record: Product) => {
     try {
       setLoading(true)
-      const {video_url, list_url} = await getLinkVideoByRecordID(video_record_id)
+      const {video_url, list_video} = await getLinkVideoByRecordID(video_record_id)
       const currentDatas = [...adsPreview]
       const {key} = record
       const findIndex = currentDatas.findIndex(
@@ -828,7 +841,7 @@ function Index({ open, setOpen, ads, storeId, setSelecteds }: Props) {
       currentDatas[findIndex] = {
         ...currentDatas[findIndex],
         video_url,
-        list_url
+        list_video
       }
       setAdsPreview(currentDatas);
       setLoading(false)
@@ -864,13 +877,13 @@ function Index({ open, setOpen, ads, storeId, setSelecteds }: Props) {
   }
 
   const renderBtnActionVideo = (record: Product) => {
-    const {video_record_id, video_url, list_url} = record
+    const {video_record_id, video_url, list_video} = record
     return (
       <div style={{display: "flex", gap: 10, marginTop: 10}}>
         {video_record_id ? <Button type='primary' size='small' onClick={() => updateVideoUrlRecord(video_record_id || "", record)}>Get Link Video</Button>: null}
         {video_url ? <Button type='primary' size='small' onClick={() => viewVideo(video_url, video_record_id)}>View</Button> : null}
         
-        {list_url && list_url.length > 1 ? <Video record={record} adsPreview={adsPreview} setAdsPreview={setAdsPreview} urls={list_url || []} /> : null} 
+        {list_video && list_video.length > 1 ? <Video record={record} adsPreview={adsPreview} setAdsPreview={setAdsPreview} videos={list_video || []} /> : null} 
       </div>
     )
   }
@@ -937,15 +950,16 @@ function Index({ open, setOpen, ads, storeId, setSelecteds }: Props) {
   }
 
   const updateNameAd = (payload: PayloadAdName): string => {
-    const {countries, name_ads_account, age_max, age_min, gender, template_adset_name, tab} = payload
+    const {countries, name_ads_account, age_max, age_min, gender, template_adset_name, tab, vc_name, template_type} = payload
     let new_name = resetTabInAdsAccountName(tab, name_ads_account).replace(`-${template_adset_name}`, "")
     new_name = createNameAdWhenChangeCountries(countries, new_name) + "-" + createAdSetName({countries, age_max, age_min, gender})
     new_name = replaceTabInAdsAccountName(tab, new_name)
+    new_name = addNameVideoCreator({old_vc_name: vc_name, vc_name, name_ads_account: new_name, template_type})
     return new_name
   }
 
   const handleChangeFieldOfAdset = (field_name: string, ad: Product) => {
-    const {name_ads_account, template_adset_name, tab} = ad
+    const {name_ads_account, template_adset_name, tab, vc_name, template_type} = ad
     let new_name_ads_account = name_ads_account
     let new_template_adset_name = template_adset_name
     switch (field_name) {
@@ -954,7 +968,7 @@ function Index({ open, setOpen, ads, storeId, setSelecteds }: Props) {
       case "age_min":
       case "age_max":
         const payload = createPayloadAdset(ad)
-        new_name_ads_account = updateNameAd({...payload, name_ads_account, template_adset_name, tab})
+        new_name_ads_account = updateNameAd({...payload, name_ads_account, template_adset_name, tab, vc_name, template_type})
         new_template_adset_name = createAdSetName(payload)
 
       default: return {

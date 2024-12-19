@@ -93,7 +93,8 @@ export type Product = {
   template_adset_name: string;
   tab: string;
   video_record_id?: string;
-  list_url?: string[]
+  list_video?: VIDEO[];
+  vc_name: string;
 };
 
 export type TARGET = {
@@ -130,4 +131,38 @@ export const STORES: any = {
   200: "PAW",
   227: "TC",
   233: "WR",
+}
+
+export type VIDEO = {
+  id: string;
+  name: string;
+  link: string;
+}
+
+export function getCreatorName(video_name: string) {
+  const lastName = video_name.split("-").pop()
+  const name = lastName?.split(".")[0]?.trim()
+  
+  return name || ""
+}
+
+export function addNameVideoCreator({old_vc_name, vc_name, name_ads_account, template_type}: {old_vc_name: string, vc_name: string, name_ads_account: string, template_type?: string}) {
+  function resetCreatorName(name_ads_account: string, old_vc_name: String) {
+    const splitNames = name_ads_account.split("-")
+    const indexVC = splitNames.findIndex(name => name === old_vc_name)
+    if (indexVC === -1) return name_ads_account
+    splitNames.splice(indexVC, 1)
+
+    return splitNames.join("-")
+  }
+  if (template_type?.includes("image")) return resetCreatorName(name_ads_account, old_vc_name)
+
+  if (!vc_name) return name_ads_account
+  const splitNames = resetCreatorName(name_ads_account, old_vc_name).split("-")
+  const indexPr = splitNames.findIndex(name => name.includes("PR"))
+  if (indexPr === -1) return name_ads_account
+
+  splitNames.splice(indexPr + 1, 0, vc_name)
+
+  return splitNames.join("-")
 }
