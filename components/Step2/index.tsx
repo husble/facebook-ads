@@ -1,5 +1,5 @@
 import { Badge, Button, Drawer, Input, Select, Switch, Table, Tooltip, message } from 'antd';
-import React, { ChangeEvent, useCallback, useEffect, useRef, useState } from 'react';
+import React, { ChangeEvent, useCallback, useContext, useEffect, useRef, useState } from 'react';
 import debounce from 'lodash.debounce';
 import * as XLSX from 'xlsx';
 import * as FileSaver from 'file-saver';
@@ -20,6 +20,7 @@ import Target from "#/components/Target"
 import Styled from "./Style"
 import Image from 'next/image';
 import Video from '#/components/Video'
+import { UserContext } from '../UserContext';
 
 const {Option} = Select
 
@@ -82,6 +83,7 @@ function Index({ open, setOpen, ads, storeId, setSelecteds }: Props) {
   const [expendRows, setExpendRows] = useState<string[]>([]);
   const [showAll, setShowAll] = useState(false)
   const [accounts, setAccounts] = useState<Account[]>([])
+  const { user } = useContext(UserContext);
   const [target, setTarget] = useState<TARGET>({
     ad_set_daily_budget: 20,
     age_min: 30,
@@ -233,6 +235,15 @@ function Index({ open, setOpen, ads, storeId, setSelecteds }: Props) {
     return name_ads_account + "-" + tab
   }
 
+  function getRecordId(tags: string) {
+    const list_tags = tags.split(", ")
+    for (const tag of list_tags) {
+      if (/^rec[A-Za-z0-9]+$/.test(tag)) return tag
+    }
+
+    return null
+  }
+
   useEffect(() => {
     async function mappingData() {
       setLoading(true);
@@ -300,7 +311,8 @@ function Index({ open, setOpen, ads, storeId, setSelecteds }: Props) {
           ad_set_daily_budget: target.ad_set_daily_budget,
           flexiable: target.flexiable,
           tab,
-          ...data_video
+          ...data_video,
+          mb_record_id: getRecordId(ad["tags"])
         });
 
         expendRows.push(ad.product_id)
@@ -515,7 +527,9 @@ function Index({ open, setOpen, ads, storeId, setSelecteds }: Props) {
       ["Image Url"]: d.image_url,
       ["Video Url"]: d.video_url,
       ["Customize Link"]: d.customize_link,
-      ["Post Id"]: d.post_id
+      ["Post Id"]: d.post_id,
+      ["Record Id"]: d.mb_record_id,
+      ["Product Id"]: d.product_id
     }));
 
     const removeKeyFromObject = (obj: any, type: string) => {
@@ -570,15 +584,8 @@ function Index({ open, setOpen, ads, storeId, setSelecteds }: Props) {
       vc_name: vc_name_data,
       list_video: []
     }
-    function getRecordId() {
-      const list_tags = tags.split(", ")
-      for (const tag of list_tags) {
-        if (/^rec[A-Za-z0-9]+$/.test(tag)) return tag
-      }
-
-      return null
-    }
-    const record_id = video_record_id || getRecordId()
+    
+    const record_id = video_record_id || getRecordId(tags)
 
     const {video_url: new_video_url, list_video, vc_name} = await getLinkVideoByRecordID(record_id)
     return {
@@ -720,7 +727,9 @@ function Index({ open, setOpen, ads, storeId, setSelecteds }: Props) {
         templates: dataTemplates,
         page_id: page.current,
         type: templateType,
-        storeId
+        storeId,
+        mb_name: name_user.current,
+        user_id: parseInt(user["shop"] || "0", 10)
       });
       setLoading(false);
       message.success('Create Campaigns successfull !!!');

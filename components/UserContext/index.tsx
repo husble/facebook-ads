@@ -4,6 +4,7 @@ import { Dispatch, SetStateAction, createContext, useState } from 'react';
 
 interface User {
   position?: string;
+  shop?: string;
 }
 
 interface UserContext {
