@@ -167,3 +167,12 @@ export function addNameVideoCreator({old_vc_name, vc_name, name_ads_account, tem
 
   return splitNames.join("-")
 }
+
+export function getRecordId(tags: string) {
+  const list_tags = tags.split(", ")
+  for (const tag of list_tags) {
+    if (/^rec[A-Za-z0-9]+$/.test(tag)) return tag
+  }
+
+  return null
+}

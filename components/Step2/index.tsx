@@ -3,6 +3,7 @@ import React, { ChangeEvent, useCallback, useContext, useEffect, useRef, useStat
 import debounce from 'lodash.debounce';
 import * as XLSX from 'xlsx';
 import * as FileSaver from 'file-saver';
+import axios from 'axios';
 
 import { LINK_DATAS, PAGES } from '#/ultils/config';
 import { useQuery } from '@apollo/client';
@@ -12,7 +13,7 @@ import { ChromeOutlined, CopyTwoTone } from '@ant-design/icons';
 import TextArea from 'antd/es/input/TextArea';
 
 import FB from '#/app/api/fb';
-import {addNameVideoCreator, FbPixel, getCreatorName, PAYLOAD_SELECT, Product, STORES, TARGET, TYPES, VIDEO} from '#/ultils';
+import {addNameVideoCreator, FbPixel, getCreatorName, getRecordId, PAYLOAD_SELECT, Product, STORES, TARGET, TYPES, VIDEO} from '#/ultils';
 import Client from '#/ultils/client';
 
 import Target from "#/components/Target"
@@ -84,6 +85,7 @@ function Index({ open, setOpen, ads, storeId, setSelecteds }: Props) {
   const [showAll, setShowAll] = useState(false)
   const [accounts, setAccounts] = useState<Account[]>([])
   const { user } = useContext(UserContext);
+  const [view_record, setViewRecord] = useState<string>("")
   const [target, setTarget] = useState<TARGET>({
     ad_set_daily_budget: 20,
     age_min: 30,
@@ -233,15 +235,6 @@ function Index({ open, setOpen, ads, storeId, setSelecteds }: Props) {
     if (!tab) return name_ads_account
 
     return name_ads_account + "-" + tab
-  }
-
-  function getRecordId(tags: string) {
-    const list_tags = tags.split(", ")
-    for (const tag of list_tags) {
-      if (/^rec[A-Za-z0-9]+$/.test(tag)) return tag
-    }
-
-    return null
   }
 
   useEffect(() => {
@@ -413,6 +406,22 @@ function Index({ open, setOpen, ads, storeId, setSelecteds }: Props) {
     setAdsPreview(newAdPreviews)
   }
 
+  const viewRecord = async (tags: string, product_id: string) => {
+    const record_id = getRecordId(tags) || ""
+    try {
+      setViewRecord(product_id)
+      const {data: {record_url}} = await axios({
+        method: "GET",
+        url: process.env.FACEBOOK_API + "/larksuite/record/" + record_id
+      })
+      window.open(record_url, "_blank")
+      setViewRecord("")
+    } catch (error) {
+      setViewRecord("")
+      message.error("Error !!!, please try again or contact admin")
+    }
+  }
+
   const columns = [
     {
       title: 'Title',
@@ -496,6 +505,12 @@ function Index({ open, setOpen, ads, storeId, setSelecteds }: Props) {
           <span onClick={() => removeCampaign(row)} className='cursor-pointer text-red-500'>x</span>
         </Tooltip>
       )
+    },
+    {
+      title: '',
+      key: "record",
+      render: (_: any, row: Product) => <Button loading={view_record === row["product_id"]} onClick={() => viewRecord(row["tags"], row["product_id"])} type='dashed'>View Record</Button>,
+      width: 200
     }
   ];
 

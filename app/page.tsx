@@ -1,12 +1,13 @@
 'use client';
 
 import { useLazyQuery, useQuery } from '@apollo/client';
-import { Button, Checkbox, Input, Select, Table, Tag } from 'antd';
+import { Button, Checkbox, Input, message, Select, Table, Tag } from 'antd';
 import { ChangeEvent, Key, useContext, useEffect, useRef, useState } from 'react';
 import Image from 'next/image';
 import debounce from 'lodash.debounce';
 import { FilterOutlined } from '@ant-design/icons';
 import moment from 'moment';
+import axios from 'axios';
 
 import { GET_PRODUCT_ADS, GET_STORES } from '#/graphql/query';
 import Settings from '#/components/Settings';
@@ -15,7 +16,7 @@ import withAuth from '#/ultils/withAuth';
 import ModalImage from '#/components/ShowImage';
 import Filter from '#/components/Filter';
 import { UserContext } from '#/components/UserContext';
-import { Product } from '#/ultils';
+import { getRecordId, Product } from '#/ultils';
 import { CheckboxChangeEvent } from 'antd/es/checkbox';
 
 const LIMIT = 25;
@@ -46,6 +47,7 @@ function Home() {
   const [paramsProductType, setParamsProductType] = useState<string>('');
   const [selecteds, setSelecteds] = useState<any[]>([]);
   const [page, setPage] = useState<number>(1);
+  const [view_record, setViewRecord] = useState<string>("")
   const storeSearch = useRef<string[]>([])
   const isVideo = useRef<boolean>(false)
   const [paramsCreatedAt, setParamsCreatedAt] = useState<
@@ -101,6 +103,22 @@ function Home() {
     isVideo.current = checked
 
     handleFilterAds()
+  }
+
+  const viewRecord = async (tags: string, product_id: string) => {
+    const record_id = getRecordId(tags) || ""
+    try {
+      setViewRecord(product_id)
+      const {data: {record_url}} = await axios({
+        method: "GET",
+        url: process.env.FACEBOOK_API + "/larksuite/record/" + record_id
+      })
+      window.open(record_url, "_blank")
+      setViewRecord("")
+    } catch (error) {
+      setViewRecord("")
+      message.error("Error !!!, please contact admin")
+    }
   }
 
   const columns = [
@@ -173,6 +191,11 @@ function Home() {
           ))}
         </>
       )
+    },
+    {
+      title: '',
+      key: "record",
+      render: (_: any, row: Product) => <Button loading={view_record === row["product_id"]} onClick={() => viewRecord(row["tags"], row["product_id"])} type='dashed'>View Record</Button>
     }
   ];
 
