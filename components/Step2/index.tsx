@@ -544,7 +544,8 @@ function Index({ open, setOpen, ads, storeId, setSelecteds }: Props) {
       ["Customize Link"]: d.customize_link,
       ["Post Id"]: d.post_id,
       ["Record Id"]: d.mb_record_id,
-      ["Product Id"]: d.product_id
+      ["Product Id"]: d.product_id,
+      ["Video Name"]: d.video_name,
     }));
 
     const removeKeyFromObject = (obj: any, type: string) => {
@@ -602,12 +603,13 @@ function Index({ open, setOpen, ads, storeId, setSelecteds }: Props) {
     
     const record_id = video_record_id || getRecordId(tags)
 
-    const {video_url: new_video_url, list_video, vc_name} = await getLinkVideoByRecordID(record_id)
+    const {video_url: new_video_url, list_video, vc_name, video_name} = await getLinkVideoByRecordID(record_id)
     return {
       video_url: new_video_url,
       vc_name,
       video_record_id: record_id,
-      list_video
+      list_video,
+      video_name
     }
   } 
 
@@ -619,7 +621,8 @@ function Index({ open, setOpen, ads, storeId, setSelecteds }: Props) {
       let data_video: any = {
         vc_name: "",
         video_url: "",
-        old_vc_name: vc_name
+        old_vc_name: vc_name,
+        video_name: ""
       }
       switch (type) {
         case "image":
@@ -759,7 +762,8 @@ function Index({ open, setOpen, ads, storeId, setSelecteds }: Props) {
     if (!record_id) return {
       video_url: "",
       list_video: [],
-      vc_name: ""
+      vc_name: "",
+      video_name: ""
     }
 
     const res = await fetch(`https://spy.husble.com/api/video-v2?record=${record_id}`)
@@ -768,12 +772,14 @@ function Index({ open, setOpen, ads, storeId, setSelecteds }: Props) {
     if (!data || data.length === 0) return {
       video_url: "",
       list_video: [],
-      vc_name: ""
+      vc_name: "",
+      video_name: ""
     }
     return {
       vc_name: getCreatorName(data[0]["name"]),
       video_url: data[0]["link"],
-      list_video: data
+      list_video: data,
+      video_name: data[0]["name"]
     }
   }
 
@@ -855,7 +861,7 @@ function Index({ open, setOpen, ads, storeId, setSelecteds }: Props) {
   const updateVideoUrlRecord = async (video_record_id: string, record: Product) => {
     try {
       setLoading(true)
-      const {video_url, list_video} = await getLinkVideoByRecordID(video_record_id)
+      const {video_url, list_video, video_name} = await getLinkVideoByRecordID(video_record_id)
       const currentDatas = [...adsPreview]
       const {key} = record
       const findIndex = currentDatas.findIndex(
@@ -865,7 +871,8 @@ function Index({ open, setOpen, ads, storeId, setSelecteds }: Props) {
       currentDatas[findIndex] = {
         ...currentDatas[findIndex],
         video_url,
-        list_video
+        list_video,
+        video_name
       }
       setAdsPreview(currentDatas);
       setLoading(false)
@@ -1113,7 +1120,8 @@ function Index({ open, setOpen, ads, storeId, setSelecteds }: Props) {
         const currentDatas = adsPreview.map((ad, index) => ({
           ...ad,
           video_url: resultPromises[index]['video_url'],
-          video_record_id: resultPromises[index]['video_record_id'] || ""
+          video_record_id: resultPromises[index]['video_record_id'] || "",
+          video_name: resultPromises[index]['video_name'] || "",
         }))
         setLoading(false)
         setAdsPreview(currentDatas)

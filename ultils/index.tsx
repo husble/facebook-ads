@@ -96,6 +96,7 @@ export type Product = {
   list_video?: VIDEO[];
   vc_name: string;
   mb_record_id: string;
+  video_name: string;
 };
 
 export type TARGET = {

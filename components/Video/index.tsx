@@ -40,7 +40,8 @@ function Index({videos, adsPreview, setAdsPreview, record}: Props) {
       ...currentDatas[findIndex],
       video_url: link,
       name_ads_account: addNameVideoCreator({old_vc_name: vc_name, vc_name: new_vc_name, name_ads_account, template_type}),
-      vc_name: new_vc_name
+      vc_name: new_vc_name,
+      video_name: name
     }
     setAdsPreview(currentDatas);
     setVideoUrl(link)
