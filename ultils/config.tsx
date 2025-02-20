@@ -2,7 +2,7 @@ export const LINK_DATAS: {[key: string]: string} = {
   "pawsionate.myshopify.com": "paw",
   "blithehub.myshopify.com": "wr",
   "wrappiness.myshopify.com": "wra",
-  "tescadeaux.myshopify.com": "tes"
+  "tescadeaux.myshopify.com": "tc"
 }
 
 export const PAGES = [

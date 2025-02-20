@@ -32,7 +32,8 @@ export const COUNTRIES = [
   { label: 'US', value: 'US' },
   { label: 'CA', value: 'CA' },
   { label: 'AU', value: 'AU' },
-  { label: 'EU', value: 'EU' }
+  { label: 'EU', value: 'EU' },
+  { label: 'FR', value: 'FR' }
 ]
 
 export const createAgeOptions = () => {
