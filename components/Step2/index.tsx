@@ -38,6 +38,13 @@ type Account = {
   name: string;
 }
 
+type Reponse = {
+  msg: string;
+  label: string;
+  id?: string;
+  code: number;
+}
+
 interface PayloadAdsetName {
   countries: string[];
   age_min: number;
@@ -85,6 +92,7 @@ function Index({ open, setOpen, ads, storeId, setSelecteds }: Props) {
   const [showAll, setShowAll] = useState(false)
   const [accounts, setAccounts] = useState<Account[]>([])
   const { user } = useContext(UserContext);
+  const [title, setTitle] = useState("")
   const [view_record, setViewRecord] = useState<string>("")
   const [target, setTarget] = useState<TARGET>({
     ad_set_daily_budget: 20,
@@ -321,6 +329,7 @@ function Index({ open, setOpen, ads, storeId, setSelecteds }: Props) {
     if (!open) return
 
     // setIsCreateCamp(false)
+    setTitle("")
     mappingData();
   }, [ads, open]);
 
@@ -465,7 +474,10 @@ function Index({ open, setOpen, ads, storeId, setSelecteds }: Props) {
       key: 'name_ads_account',
       dataIndex: 'name_ads_account',
       render: (name_ads_account: string, record: Product) => (
-        <TextArea onChange={(e) => handleChangeAdAccount(e, record)} key={name_ads_account} defaultValue={name_ads_account} />
+        <>
+          {record.msg?.code ? <span className={`${record.msg?.code === 200 ? "msg_success" : "msg_fail"}`}>* {record.msg.title}</span> : null}
+          <TextArea onChange={(e) => handleChangeAdAccount(e, record)} key={name_ads_account} defaultValue={name_ads_account} />
+        </>
       )
     },
     {
@@ -738,10 +750,34 @@ function Index({ open, setOpen, ads, storeId, setSelecteds }: Props) {
   }
 
   const handleCreateCamp = async () => {
+    const mappingMsg = (datas: Reponse[]) => {
+      if (datas.length == 0) {
+        const newAdPreviews = adsPreview.map(ad => {
+          return {
+            ...ad,
+            msg: null
+          }
+        })
+        setAdsPreview(newAdPreviews)
+        return
+      }
+      const newAdPreviews = adsPreview.map(ad => {
+        const data = datas.find(data => data["label"] === ad["name_ads_account"])
+        if (!data) return ad
+        return {
+          ...ad,
+          msg: {
+            code: data["code"],
+            title: data["msg"]
+          }
+        }
+      })
+      setAdsPreview(newAdPreviews)
+    }
     try {
       setLoading(true);
       const dataTemplates = await getDataCamps();
-      await FB.createCamp({
+      const {data} = await FB.createCamp({
         templates: dataTemplates,
         page_id: page.current,
         type: templateType,
@@ -749,11 +785,22 @@ function Index({ open, setOpen, ads, storeId, setSelecteds }: Props) {
         mb_name: name_user.current,
         user_id: parseInt(user["shop"] || "0", 10)
       });
+      const {datas}:{datas: Reponse[]} = data
+      const camp_faileds = datas.filter(data => data["code"] !== 200)
+      if (camp_faileds.length === 0) {
+        message.success('Campaign creation was successful !!!');
+        setTitle(`All created campaigns are successful (${adsPreview.length} ${adsPreview.length === 1 ? "camp" : "camps"})`)
+      } else {
+        setTitle(`Have campaigns failed (${camp_faileds.length} ${camp_faileds.length === 1 ? "camp" : "camps"})`)
+        message.warning('Some campaigns have failed. Please check !!!');
+      }
+      mappingMsg(datas)
       setLoading(false);
-      message.success('Create Campaigns successfull !!!');
     } catch (error) {
       setLoading(false);
       message.error('Create Campaigns failed !!!');
+      setTitle("All created campaigns have failed.")
+      mappingMsg([])
     }
   };
 
@@ -1142,6 +1189,7 @@ function Index({ open, setOpen, ads, storeId, setSelecteds }: Props) {
         width="100vw"
         placement="left"
         className='drawer_step2'
+        title={title}
       >
         <div className='sticky'>
           <div className="flex justify-between flex-wrap gap-2">

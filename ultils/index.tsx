@@ -98,6 +98,10 @@ export type Product = {
   vc_name: string;
   mb_record_id: string;
   video_name: string;
+  msg: {
+    title: string;
+    code: number
+  } | null
 };
 
 export type TARGET = {
