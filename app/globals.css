@@ -62,3 +62,11 @@ body {
 .camp_type {
   width: calc(100% - 150px);
 }
+
+.msg_success {
+  color: green;
+}
+
+.msg_fail {
+  color: red
+}
