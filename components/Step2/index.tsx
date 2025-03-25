@@ -3,7 +3,7 @@ import React, { ChangeEvent, useCallback, useContext, useEffect, useRef, useStat
 import debounce from 'lodash.debounce';
 import * as XLSX from 'xlsx';
 import * as FileSaver from 'file-saver';
-import axios from 'axios';
+import axios, { AxiosError, AxiosResponse } from 'axios';
 
 import { LINK_DATAS, PAGES } from '#/ultils/config';
 import { useQuery } from '@apollo/client';
@@ -714,6 +714,7 @@ function Index({ open, setOpen, ads, storeId, setSelecteds }: Props) {
         page_id: page.current,
         type: templateType
       });
+      const post_faileds = postIds.filter((data: Partial<AxiosResponse> & Reponse) => data["code"] !== 200)
       let newAdsPreview = [...adsPreview]
 
       switch (templateType) {
@@ -721,7 +722,11 @@ function Index({ open, setOpen, ads, storeId, setSelecteds }: Props) {
           newAdsPreview = adsPreview.map((ad, index) => {
             return {
               ...ad,
-              post_id: postIds[index].post_id.split("_")[1]
+              post_id: postIds[index].post_id ? postIds[index].post_id.split("_")[1] : "",
+              msg: {
+                code: postIds[index]["code"],
+                title: postIds[index]["msg"]
+              }
             }
           })
           break
@@ -730,22 +735,31 @@ function Index({ open, setOpen, ads, storeId, setSelecteds }: Props) {
           newAdsPreview = adsPreview.map((ad, index) => {
             return {
               ...ad,
-              post_id: postIds[index].post_id
+              post_id: postIds[index].post_id,
+              msg: {
+                code: postIds[index]["code"],
+                title: postIds[index]["msg"]
+              }
             }
           })
           break
 
         default: break
       }
-
+      if (post_faileds.length === 0) {
+        message.success('Created posts was successful !!!');
+        setTitle(`All created posts are successful (${adsPreview.length} ${adsPreview.length === 1 ? "post" : "posts"})`)
+      } else {
+        setTitle(`Have posts failed (${post_faileds.length} ${post_faileds.length === 1 ? "post" : "posts"})`)
+        message.warning('Some posts have failed. Please check !!!');
+      }
       setIsCreateCamp(true)
       setAdsPreview(newAdsPreview)
       setLoading(false);
-      message.success('Create Posts successfull !!!');
     } catch (error) {
       setIsCreateCamp(false)
       setLoading(false);
-      message.error('Create Campaigns failed !!!');
+      message.error('Create posts failed !!!');
     }
   }
 
@@ -799,7 +813,8 @@ function Index({ open, setOpen, ads, storeId, setSelecteds }: Props) {
     } catch (error) {
       setLoading(false);
       message.error('Create Campaigns failed !!!');
-      setTitle("All created campaigns have failed.")
+      const err = error as AxiosError<{ message: string }>
+      setTitle("All created campaigns have failed. " + err.response?.data?.message || "Unknown error")
       mappingMsg([])
     }
   };
