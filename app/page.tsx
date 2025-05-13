@@ -337,8 +337,7 @@ function Home() {
         />
         <Input.Search
           allowClear
-          className="w-[400px] inline-block"
-          style={{ width: '400px !important' }}
+          className="!w-[400px] inline-block"
           onSearch={onSearch}
           value={seachValue}
           onChange={changeSearch}

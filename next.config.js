@@ -12,7 +12,7 @@ const nextConfig = {
     JWT_SECRET_KEY: process.env.JWT_SECRET_KEY
   },
   images: {
-    domains: ['cdn.shopify.com']
+    domains: ['cdn.shopify.com', "p16-sign-sg.tiktokcdn.com", "p9-sign-sg.tiktokcdn.com"]
   }
 };
 
