@@ -36,6 +36,11 @@ export const COUNTRIES = [
   { label: 'FR', value: 'FR' }
 ]
 
+export enum PLATFORM {
+  FACEBOOK = 'facebook',
+  TIKTOK = 'tiktok'
+}
+
 export const createAgeOptions = () => {
   const options = []
   for (let index = 13; index <= 65; index++) {
@@ -180,5 +185,5 @@ export function getRecordId(tags: string) {
     if (/^rec[A-Za-z0-9]+$/.test(tag)) return tag
   }
 
-  return null
+  return ""
 }

@@ -49,6 +49,15 @@ body {
   display: inline-block;
 }
 
+.drawer_step2 .drawer_title  {
+  display: flex;
+  align-items: center;
+}
+
+.drawer_step2 .drawer_body {
+  padding-top: 10px;
+}
+
 .btn__create--post {
   background-color: #ff8831 !important;
   margin-left: 8px;
@@ -70,3 +79,36 @@ body {
 .msg_fail {
   color: red
 }
+
+/* begin css tiktok account */
+  .tiktok_account .tiktok_account--name {
+    margin: 10px;
+    text-align: center;
+  }
+  .tiktok_account ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+  }
+
+  .tiktok_account ul li {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    cursor: pointer;
+    padding: 5px 10px;
+    border-radius: 7px;
+  }
+
+  .tiktok_account ul li:hover {
+    background-color: #ffffff21;
+  }
+
+  .tiktok_account ul li span {
+    width: 20px;
+  }
+  
+  .tiktok_account ul li span svg {
+    margin-left: auto;
+  }
+/* end css tiktok account */
