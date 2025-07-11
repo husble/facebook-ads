@@ -1,3 +1,6 @@
+import { message } from "antd";
+import axios from "axios";
+
 export const transformArrayKeys = <T extends string>(
   arrayOfObjects: Record<string, T>[]
 ): Record<string, T>[] => {
@@ -106,7 +109,8 @@ export type Product = {
   msg: {
     title: string;
     code: number
-  } | null
+  } | null;
+  redirect_url: string;
 };
 
 export type TARGET = {
@@ -186,4 +190,20 @@ export function getRecordId(tags: string) {
   }
 
   return ""
+}
+
+export async function getRedirectUlr(product_id: string, shop: string) {
+  try {
+    
+    const {data: {redirect_url}} = await axios({
+      method: "GET",
+      url: process.env.FACEBOOK_API + "/shopify/products/" + product_id,
+      params: {
+        shop
+      }
+    })
+    return redirect_url
+  } catch (error) {
+    message.error("Error when trying get redirect url, please check !!!")
+  }
 }
