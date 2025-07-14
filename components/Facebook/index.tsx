@@ -5,7 +5,7 @@ import * as XLSX from 'xlsx';
 import * as FileSaver from 'file-saver';
 import axios, { AxiosError, AxiosResponse } from 'axios';
 
-import { LINK_DATAS, PAGES } from '#/ultils/config';
+import { PAGES } from '#/ultils/config';
 import { useQuery } from '@apollo/client';
 import { GET_ACCOUNTS, GET_PIXELS, GET_TEMPLATE_ADS_COPY } from '#/graphql/query';
 import moment from 'moment';
@@ -13,7 +13,7 @@ import { ChromeOutlined, CopyTwoTone } from '@ant-design/icons';
 import TextArea from 'antd/es/input/TextArea';
 
 import FB from '#/app/api/fb';
-import {addNameVideoCreator, FbPixel, getRecordId, PAYLOAD_SELECT, PLATFORM, Product, STORES, TARGET, TYPES} from '#/ultils';
+import {addNameVideoCreator, FbPixel, getRecordId, getRedirectUlr, PAYLOAD_SELECT, PLATFORM, Product, STORES, TARGET, TYPES} from '#/ultils';
 
 import Target from "#/components/Target"
 
@@ -282,6 +282,7 @@ function Index({ open, ads, storeId, setSelecteds, platform }: Props) {
         const payLoadAdset = createPayloadAdset({...ad, name_ads_account: new_name_ads_account})
         const template_adset_name = createAdSetName(payLoadAdset)
         new_name_ads_account = updateNameAd({...payLoadAdset, name_ads_account: new_name_ads_account, template_adset_name, tab, vc_name: data_video?.vc_name, template_type: templateType})
+        const redirect_url = await getRedirectUlr(ad.product_id, store_name);
         results.push({
           ...ad,
           key: ad.product_id,
@@ -289,7 +290,7 @@ function Index({ open, ads, storeId, setSelecteds, platform }: Props) {
           name_ads_account: new_name_ads_account,
           template_account: account.current?.split("=")[0],
           template_user: name_user.current,
-          body: `${message} \nCustomize yours: https://${store_name.replace("blithehub.myshopify.com", "wrappiness.co").replace(".myshopify", "")}/${LINK_DATAS[store_name].slice(0, 3)}-${ad.product_id}` || "",
+          body: `${message} \nCustomize yours: ${redirect_url}` || "",
           gender: target.gender,
           age_min: target.age_min,
           age_max: target.age_max,
@@ -298,7 +299,8 @@ function Index({ open, ads, storeId, setSelecteds, platform }: Props) {
           flexiable: target.flexiable,
           tab,
           ...data_video,
-          mb_record_id: getRecordId(ad["tags"])
+          mb_record_id: getRecordId(ad["tags"]),
+          redirect_url,
         });
       }
       checkFulFillDataCreateCamp(results, templateType)
@@ -513,7 +515,7 @@ function Index({ open, ads, storeId, setSelecteds, platform }: Props) {
       ['Ad Name']: d.template_user,
       ['Body']: d.body,
       ['Conversion Tracking Pixels']: d.conversion_tracking_pixels,
-      ['Link']: `https://${store_name.replace("blithehub.myshopify.com", "wrappiness.co").replace(".myshopify", "")}/${LINK_DATAS[store_name].slice(0, 3)}-${d.product_id}`,
+      ['Link']: d.redirect_url,
       ["Pixel_Id"]: pixel.current.split("=")[0],
       ["Instagram_Id"]: pixel.current.split("=")[1],
       ['Link Object ID']: page.current,
@@ -1000,7 +1002,7 @@ function Index({ open, ads, storeId, setSelecteds, platform }: Props) {
     const store_name = adsPreview[0].store_2.shop
     const currentDatas: Product[] = [...adsPreview].map(ad => ({
       ...ad,
-      body: `${message} \n Customize yours: https://${store_name.replace("blithehub.myshopify.com", "wrappiness.co").replace(".myshopify", "")}/${LINK_DATAS[store_name].slice(0, 3)}-${ad.product_id}` || ""
+      body: `${message} \n Customize yours: ${ad.redirect_url}` || ""
     }))
     setAdsPreview(currentDatas);
   }

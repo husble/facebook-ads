@@ -74,7 +74,7 @@ export const updateTemplate = async (value: string, record: Product, adsPreview:
   if (platform === PLATFORM.FACEBOOK) {
     currentDatas[findIndex] = {
       ...currentDatas[findIndex],
-      body: `${message} \n Customize yours: https://${store_name.replace("blithehub.myshopify.com", "wrappiness.co").replace(".myshopify", "")}/${LINK_DATAS[store_name].slice(0, 3)}-${record.product_id}` || ""
+      body: `${message} \n Customize yourss: ${currentDatas[findIndex]["redirect_url"]}` || ""
     };
   }
 
