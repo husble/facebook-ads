@@ -224,3 +224,19 @@ export const UPSERT_CONFIG = gql`
     }
   }
 `
+
+export const UPSERT_CONFIG_BY_TYPE_CODE = gql`
+  mutation insert_configs_one(
+    $object: configs_insert_input!
+  ) {
+    insert_configs_one(
+      object: $object
+      on_conflict: {
+        constraint: configs_type_code_key
+        update_columns: [data]
+      }
+    ) {
+      data
+    }
+  }
+`

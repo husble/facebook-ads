@@ -7,7 +7,7 @@ import axios, { AxiosError, AxiosResponse } from 'axios';
 
 import { PAGES } from '#/ultils/config';
 import { useQuery } from '@apollo/client';
-import { GET_ACCOUNTS, GET_PIXELS, GET_TEMPLATE_ADS_COPY } from '#/graphql/query';
+import { GET_ACCOUNTS, GET_CONFIG, GET_PIXELS, GET_TEMPLATE_ADS_COPY } from '#/graphql/query';
 import moment from 'moment';
 import { ChromeOutlined, CopyTwoTone } from '@ant-design/icons';
 import TextArea from 'antd/es/input/TextArea';
@@ -22,6 +22,7 @@ import { UserContext } from '../UserContext';
 import { getTemplateMessage, getVideoByRecordId, updateTemplate } from '#/ultils/video';
 import Table from "#/components/Table";
 import { renderBtnActionVideo } from '../Video';
+import { Page, PAGE_CODE, PAGE_TYPE } from '../Settings/Page';
 
 const {Option} = Select
 
@@ -101,6 +102,7 @@ function Index({ open, ads, storeId, setSelecteds, platform }: Props) {
     flexiable: "No",
     gender: "All"
   })
+  const [pages, setPage] = useState<Page[]>([])
   const account = useRef<string>("")
   const page = useRef<string>("")
   const name_user = useRef<string>("")
@@ -121,6 +123,26 @@ function Index({ open, ads, storeId, setSelecteds, platform }: Props) {
         }
       })
       setAccounts(mappingAccounts)
+    }
+  })
+
+  useQuery(GET_CONFIG, {
+    variables: {
+      where: {
+        type: {
+          _eq: PAGE_TYPE
+        },
+        code: {
+          _eq: PAGE_CODE
+        }
+      }
+    },
+    onCompleted: ({configs}) => {
+      try {
+        const pages = configs[0].data.value
+        if (!pages) throw "Pages Config is not found"
+        setPage(pages)
+      } catch (error) {setPage(PAGES)}
     }
   })
 
@@ -1049,7 +1071,7 @@ function Index({ open, ads, storeId, setSelecteds, platform }: Props) {
                 placeholder="choose page"
                 onChange={choosePage}
               >
-                {PAGES.map(page => (
+                {pages.map(page => (
                   <Option key={page.value} value={page.value}>{page.label}</Option>
                 ))}
               </Select>
