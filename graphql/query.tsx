@@ -49,6 +49,7 @@ export const GET_STORES = gql`
       shop
       timezone
       name
+      store_ads
     }
   }
 `;
