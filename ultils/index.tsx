@@ -143,12 +143,6 @@ export type TemplateAdCopy = {
   message: string;
 }
 
-export const STORES: any = {
-  200: "PAW",
-  227: "TC",
-  233: "WR",
-}
-
 export type VIDEO = {
   id: string;
   name: string;

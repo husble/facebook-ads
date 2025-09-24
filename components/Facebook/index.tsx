@@ -13,7 +13,7 @@ import { ChromeOutlined, CopyTwoTone } from '@ant-design/icons';
 import TextArea from 'antd/es/input/TextArea';
 
 import FB from '#/app/api/fb';
-import {addNameVideoCreator, FbPixel, getRecordId, getRedirectUlr, PAYLOAD_SELECT, PLATFORM, Product, STORES, TARGET, TYPES} from '#/ultils';
+import {addNameVideoCreator, FbPixel, getRecordId, getRedirectUlr, PAYLOAD_SELECT, PLATFORM, Product, TARGET, TYPES} from '#/ultils';
 
 import Target from "#/components/Target"
 
@@ -23,6 +23,7 @@ import { getTemplateMessage, getVideoByRecordId, updateTemplate } from '#/ultils
 import Table from "#/components/Table";
 import { renderBtnActionVideo } from '../Video';
 import { Page, PAGE_CODE, PAGE_TYPE } from '../Settings/Page';
+import { STORE } from '#/app/page';
 
 const {Option} = Select
 
@@ -33,6 +34,7 @@ type Props = {
   storeId: number;
   setSelecteds: Function;
   platform: PLATFORM;
+  stores: STORE[]
 }
 
 type Account = {
@@ -84,7 +86,7 @@ const createAdSetName = (payload: PayloadAdsetName): string => {
   return name
 }
 
-function Index({ open, ads, storeId, setSelecteds, platform }: Props) {
+function Index({ open, ads, storeId, setSelecteds, platform, stores }: Props) {
   const [adsPreview, setAdsPreview] = useState<Product[]>([]);
   const [loading, setLoading] = useState<boolean>(false);
   const [isCreatePost, setIsCreatePost] = useState<Boolean>(false)
@@ -185,21 +187,24 @@ function Index({ open, ads, storeId, setSelecteds, platform }: Props) {
   const createNameAdWhenChangeCountries = (countries: string[], name_ads_account: string): string => {
     const length = countries.length
     let newName = name_ads_account
+    const store_ad_name = stores.find(store => store.id == storeId)?.store_ads
 
-    switch (length) {
-      case 1:
-        newName = name_ads_account.replace(`[${STORES[storeId]} ALL`, `[${STORES[storeId]}`)
-        break
-
-      case 2:
-      case 3:
-      case 4:
-        if (name_ads_account.indexOf(`[${STORES[storeId]} ALL`) === -1) {
-          newName = name_ads_account.replace(`[${STORES[storeId]}`, `[${STORES[storeId]} ALL`)
-        }
-        break
-
-      default: break
+    if (store_ad_name) {
+      switch (length) {
+        case 1:
+          newName = name_ads_account.replace(`[${store_ad_name} ALL`, `[${store_ad_name}`)
+          break
+  
+        case 2:
+        case 3:
+        case 4:
+          if (name_ads_account.indexOf(`[${store_ad_name} ALL`) === -1) {
+            newName = name_ads_account.replace(`[${store_ad_name}`, `[${store_ad_name} ALL`)
+          }
+          break
+  
+        default: break
+      }
     }
 
     return newName

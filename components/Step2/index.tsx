@@ -10,6 +10,7 @@ import Facebook from "#/components/Facebook"
 import { FacebookIcon, LogoutIcon, SwitchIcon, TiktokIcon } from '#/components/svg';
 
 import Styled from "./Style"
+import { STORE } from '#/app/page';
 
 const {Option} = Select
 
@@ -19,6 +20,7 @@ type Props = {
   ads: Product[];
   storeId: number;
   setSelecteds: Function;
+  stores: STORE[]
 }
 
 const PLATFORMS = [
@@ -34,7 +36,7 @@ const PLATFORMS = [
   },
 ];
 
-function Index({ open, setOpen, ads, storeId, setSelecteds }: Props) {
+function Index({ open, setOpen, ads, storeId, setSelecteds, stores }: Props) {
   const [platform, setPlatform] = useState<PLATFORM>(PLATFORMS[0].value);
   const [user, setUser] = useState<any>(null)
 
@@ -111,6 +113,7 @@ function Index({ open, setOpen, ads, storeId, setSelecteds }: Props) {
         storeId={storeId}
         setSelecteds={setSelecteds}
         platform={platform}
+        stores={stores}
       />
     }
 

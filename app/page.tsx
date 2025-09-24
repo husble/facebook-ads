@@ -21,11 +21,12 @@ import { CheckboxChangeEvent } from 'antd/es/checkbox';
 
 const LIMIT = 25;
 
-type STORE = {
+export type STORE = {
   id: Key;
   shop: String;
   timezone: String;
   name: String;
+  store_ads: string;
 };
 
 type ProductType = {
@@ -405,7 +406,7 @@ function Home() {
         setParamsCreatedAt={setParamsCreatedAt}
       />
       <Settings open={open} setOpen={setOpen} />
-      <Step2 storeId={storeRef.current} ads={selecteds} open={openStep2} setOpen={setOpenStep2} setSelecteds={setSelecteds} />
+      <Step2 stores={stores} storeId={storeRef.current} ads={selecteds} open={openStep2} setOpen={setOpenStep2} setSelecteds={setSelecteds} />
       <ModalImage setImageUrl={setImageUrl} image_url={image_url} />
     </div>
   );
