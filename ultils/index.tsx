@@ -111,6 +111,7 @@ export type Product = {
     code: number
   } | null;
   redirect_url: string;
+  languages: number[] | null
 };
 
 export type TARGET = {
@@ -120,6 +121,7 @@ export type TARGET = {
   age_min: number;
   gender: string;
   flexiable: string;
+  languages: number[] | null
 }
 
 export type PAYLOAD_SELECT = {

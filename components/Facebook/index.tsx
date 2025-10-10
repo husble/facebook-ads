@@ -27,6 +27,11 @@ import { STORE } from '#/app/page';
 
 const {Option} = Select
 
+export type COUNTRY = {
+  name: string;
+  key: number;
+}
+
 type Props = {
   open: boolean;
   setOpen: Function;
@@ -54,6 +59,7 @@ interface PayloadAdsetName {
   age_min: number;
   age_max: number;
   gender: string;
+  languages?: number[];
 }
 
 interface PayloadAdName extends PayloadAdsetName {
@@ -93,6 +99,7 @@ function Index({ open, ads, storeId, setSelecteds, platform, stores }: Props) {
   const [isCreateCamp, setIsCreateCamp] = useState<Boolean>(false)
   const [templateType, setProductType] = useState<string>('image');
   const [accounts, setAccounts] = useState<Account[]>([])
+  const [countries, setCountries] = useState<COUNTRY[]>([])
   const { user } = useContext(UserContext);
   const [title, setTitle] = useState("")
   const [view_record, setViewRecord] = useState<string>("")
@@ -102,7 +109,8 @@ function Index({ open, ads, storeId, setSelecteds, platform, stores }: Props) {
     age_max: 65,
     countries: ["US"],
     flexiable: "No",
-    gender: "All"
+    gender: "All",
+    languages: null
   })
   const [pages, setPage] = useState<Page[]>([])
   const account = useRef<string>("")
@@ -567,6 +575,7 @@ function Index({ open, ads, storeId, setSelecteds, platform, stores }: Props) {
       ["Record Id"]: d.mb_record_id,
       ["Product Id"]: d.product_id,
       ["Video Name"]: d.video_name,
+      ["Languages"]: d.languages,
     }));
 
     const removeKeyFromObject = (obj: any, type: string) => {
@@ -1100,7 +1109,7 @@ function Index({ open, ads, storeId, setSelecteds, platform, stores }: Props) {
               />
             </div>
             <div className='flex gap-2 mt-3 items-center'>
-              <Target record={target} is_all={true} handleChooseSelect={handleChooseSelect} />
+              <Target countries={countries} setCountries={setCountries} record={target} is_all={true} handleChooseSelect={handleChooseSelect} />
             </div>
           </div>
           <div>
@@ -1141,7 +1150,7 @@ function Index({ open, ads, storeId, setSelecteds, platform, stores }: Props) {
                       value: template.name
                     }))}
                   />
-                  <Target is_all={false} record={record} handleChooseSelect={handleChooseSelect} />
+                  <Target countries={countries} setCountries={setCountries} is_all={false} record={record} handleChooseSelect={handleChooseSelect} />
                 </div>
               </li>
               <li style={{width: "100%"}}>

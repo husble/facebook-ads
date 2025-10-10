@@ -1,16 +1,31 @@
+import React, { useCallback, useState } from 'react'
+
 import { GET_CONFIG } from '#/graphql/query'
 import { COUNTRIES, GENDERS, Product, TARGET, createAgeOptions } from '#/ultils'
 import { useQuery } from '@apollo/client'
-import { InputNumber, Radio, Select } from 'antd'
-import React, { useState } from 'react'
+import axios from 'axios'
+import debounce from 'lodash.debounce'
+import { InputNumber, message, Radio, Select } from 'antd'
 import { CONFIG, DATA_VALUE, TYPE_TARGET } from '../Settings/Target/type'
+import { COUNTRY } from '../Facebook'
+
 
 const {Option} = Select
 
+type Props = {
+  record: Product | TARGET;
+  handleChooseSelect: Function;
+  is_all: boolean;
+  countries: COUNTRY[];
+  setCountries: Function;
+}
+
 const AGES = createAgeOptions()
 
-function Index({record, handleChooseSelect, is_all}: {record: Product | TARGET, handleChooseSelect: Function, is_all: boolean}) {
+function Index({record, handleChooseSelect, is_all, countries, setCountries}: Props) {
   const [targets, setTarget] = useState<any[]>([])
+  const [loading, setLoading] = useState(false);
+
   useQuery(GET_CONFIG, {
     variables: {
       where: {
@@ -51,6 +66,27 @@ function Index({record, handleChooseSelect, is_all}: {record: Product | TARGET, 
       setTarget(results)
     }
   })
+
+  const searchCountries = useCallback(debounce(async (value: string) => {
+    try {
+      setLoading(true)
+      const {data: {countries}} = await axios.request({
+        method: 'GET',
+        url: process.env.FACEBOOK_API + "/facebook/search_countries" + "?search=" + value,
+      })
+
+      setCountries(countries)
+      setLoading(false)
+    } catch (error) {
+      message.error("Error fetching countries")
+      setLoading(true)
+    }
+  }, 300), [])
+
+  const chooseCountry = (value: number[]) => {
+    handleChooseSelect({value, record, field_name: "languages", is_all})
+  }
+
   return (
     <div className='flex items-center flex-wrap gap-2'>
       <div className='flex items-center gap-1'>
@@ -72,6 +108,35 @@ function Index({record, handleChooseSelect, is_all}: {record: Product | TARGET, 
           onChange={(value) => handleChooseSelect({value, record, field_name: "countries", is_all})}
         />
       </div>
+      <div>
+        <Select<number[]>
+          showSearch
+          style={{minWidth: 200}}
+          onSearch={searchCountries}
+          notFoundContent={loading ? "Loading..." : "No results"}
+          filterOption={false}
+          loading={loading}
+          onChange={chooseCountry}
+          mode="multiple"
+          value={record.languages || []}
+          allowClear
+          placeholder="choose languages"
+        >
+          {countries.map(country => (
+            <Option key={`${country.key}`} value={country.key}>{country.name}</Option>
+          ))}
+        </Select>
+      </div>
+      {/* <div className='flex items-center gap-1'>
+        <strong>Location:</strong>
+        <Select
+          value={record.countries}
+          key={Math.random()}
+          options={COUNTRIES}
+          mode='multiple'
+          onChange={(value) => handleChooseSelect({value, record, field_name: "countries", is_all})}
+        />
+      </div> */}
       <div className='flex items-center gap-1'>
         <strong>Age:</strong>
         <Select
