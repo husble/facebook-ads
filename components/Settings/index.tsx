@@ -8,6 +8,7 @@ import Pixels from '#/components/Settings/Pixels';
 import AdCopy from '#/components/Settings/AdCopy';
 import Target from '#/components/Settings/Target';
 import Page from '#/components/Settings/Page';
+import Store from '#/components/Settings/Store';
 
 type ModalProps = {
   open: boolean;
@@ -26,6 +27,7 @@ function Index({ open, setOpen }: ModalProps) {
     { title: 'Pixels', components: <Pixels /> },
     { title: 'Target', components: <Target /> },
     { title: 'Page', components: <Page /> },
+    { title: 'Store', components: <Store /> },
   ]);
 
   return (

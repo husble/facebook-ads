@@ -10,7 +10,7 @@ import Facebook from "#/components/Facebook"
 import { FacebookIcon, LogoutIcon, SwitchIcon, TiktokIcon } from '#/components/svg';
 
 import Styled from "./Style"
-import { STORE } from '#/app/page';
+import { STORE } from '../Settings/Store';
 
 const {Option} = Select
 

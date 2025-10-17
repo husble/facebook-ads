@@ -18,16 +18,9 @@ import Filter from '#/components/Filter';
 import { UserContext } from '#/components/UserContext';
 import { getRecordId, Product } from '#/ultils';
 import { CheckboxChangeEvent } from 'antd/es/checkbox';
+import { STORE } from '#/components/Settings/Store';
 
 const LIMIT = 25;
-
-export type STORE = {
-  id: Key;
-  shop: String;
-  timezone: String;
-  name: String;
-  store_ads: string;
-};
 
 type ProductType = {
   title: String;
@@ -67,8 +60,9 @@ function Home() {
   });
 
   useQuery(GET_STORES, {
-    onCompleted: ({ store_2 }: any) => {
-      setStores(store_2);
+    onCompleted: ({ store_2 }: {store_2: STORE[]}) => {
+      const datas = store_2.filter(store => !!store.status_ads)
+      setStores(datas)
     }
   });
 
@@ -329,12 +323,14 @@ function Home() {
     <div>
       <header className="sticky top-0 z-50 py-4 px-5 shadow-shadow-section bg-white flex justify-between flex-wrap">
         <Select
-          defaultValue="pawsionate.myshopify.com"
+          defaultValue={stores[0]?.label || ""}
           onChange={handleSelectStore}
           options={stores.map((store: STORE) => ({
             value: store.shop,
-            label: store.shop
+            label: store.label
           }))}
+          key={stores[0]?.label || ""}
+          style={{minWidth: 200}}
         />
         <Input.Search
           allowClear

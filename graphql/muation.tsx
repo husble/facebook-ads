@@ -240,3 +240,19 @@ export const UPSERT_CONFIG_BY_TYPE_CODE = gql`
     }
   }
 `
+
+export const UPDATE_STORE = gql`
+  mutation update_store_2_by_pk(
+    $id: Int!
+    $_set: store_2_set_input
+  ) {
+    update_store_2_by_pk(
+      pk_columns: {
+        id: $id
+      }
+      _set: $_set
+    ) {
+      id
+    }
+  }
+`

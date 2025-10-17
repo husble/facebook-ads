@@ -44,12 +44,19 @@ export const GET_PRODUCT_ADS = gql`
 
 export const GET_STORES = gql`
   query store_2 {
-    store_2(where: { store_ads: { _is_null: false } }) {
+    store_2(
+      where: {
+        store_ads: { _is_null: false } 
+      }) 
+    {
       id
       shop
       timezone
       name
       store_ads
+      status_ads
+      product_set
+      label
     }
   }
 `;
