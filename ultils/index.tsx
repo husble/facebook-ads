@@ -203,3 +203,16 @@ export async function getRedirectUlr(product_id: string, shop: string) {
     message.error("Error when trying get redirect url, please check !!!")
   }
 }
+
+export async function getProductsets(catalog_id: string) {
+  try {
+    
+    const {data} = await axios({
+      method: "GET",
+      url: process.env.FACEBOOK_API + `/facebook/${catalog_id}/product_sets`,
+    })
+    return data
+  } catch (error) {
+    message.error("Error when trying get redirect url, please check !!!")
+  }
+}

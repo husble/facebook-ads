@@ -23,7 +23,7 @@ import { getTemplateMessage, getVideoByRecordId, updateTemplate } from '#/ultils
 import Table from "#/components/Table";
 import { renderBtnActionVideo } from '../Video';
 import { Page, PAGE_CODE, PAGE_TYPE } from '../Settings/Page';
-import { STORE } from '#/app/page';
+import { STORE } from '../Settings/Store';
 
 const {Option} = Select
 
