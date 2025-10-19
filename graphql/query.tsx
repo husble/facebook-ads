@@ -56,6 +56,7 @@ export const GET_STORES = gql`
       store_ads
       status_ads
       product_set
+      product_catalog
       label
     }
   }
