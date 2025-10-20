@@ -23,7 +23,7 @@ import { getTemplateMessage, getVideoByRecordId, updateTemplate } from '#/ultils
 import Table from "#/components/Table";
 import { renderBtnActionVideo } from '../Video';
 import { Page, PAGE_CODE, PAGE_TYPE } from '../Settings/Page';
-import { STORE } from '#/app/page';
+import { STORE } from '../Settings/Store';
 
 const {Option} = Select
 
@@ -36,7 +36,7 @@ type Props = {
   open: boolean;
   setOpen: Function;
   ads: Product[];
-  storeId: number;
+  store: STORE | null;
   setSelecteds: Function;
   platform: PLATFORM;
   stores: STORE[]
@@ -92,7 +92,7 @@ const createAdSetName = (payload: PayloadAdsetName): string => {
   return name
 }
 
-function Index({ open, ads, storeId, setSelecteds, platform, stores }: Props) {
+function Index({ open, ads, store, setSelecteds, platform, stores }: Props) {
   const [adsPreview, setAdsPreview] = useState<Product[]>([]);
   const [loading, setLoading] = useState<boolean>(false);
   const [isCreatePost, setIsCreatePost] = useState<Boolean>(false)
@@ -110,7 +110,9 @@ function Index({ open, ads, storeId, setSelecteds, platform, stores }: Props) {
     countries: ["US"],
     flexiable: "No",
     gender: "All",
-    languages: null
+    languages: null,
+    product_catalog: store?.product_catalog,
+    product_set: store?.product_set
   })
   const [pages, setPage] = useState<Page[]>([])
   const account = useRef<string>("")
@@ -156,6 +158,16 @@ function Index({ open, ads, storeId, setSelecteds, platform, stores }: Props) {
     }
   })
 
+  useEffect(() => {
+    if (!store) return
+
+    setTarget({
+      ...target,
+      product_catalog: store.product_catalog,
+      product_set: store.product_set
+    })
+  }, [store])
+
   useQuery(GET_TEMPLATE_ADS_COPY, {
     variables: {
       where: {}
@@ -172,7 +184,7 @@ function Index({ open, ads, storeId, setSelecteds, platform, stores }: Props) {
     onCompleted: ({ fb_pixels }) => {
       fbPixels.current = fb_pixels;
       const pixelDefault = () => {
-        const fb_pixel = fb_pixels.find((fb_pixel: FbPixel) => fb_pixel.store_id === storeId)
+        const fb_pixel = fb_pixels.find((fb_pixel: FbPixel) => fb_pixel.store_id === store?.id)
 
         pixel.current = fb_pixel
       }
@@ -195,7 +207,7 @@ function Index({ open, ads, storeId, setSelecteds, platform, stores }: Props) {
   const createNameAdWhenChangeCountries = (countries: string[], name_ads_account: string): string => {
     const length = countries.length
     let newName = name_ads_account
-    const store_ad_name = stores.find(store => store.id == storeId)?.store_ads
+    const store_ad_name = stores.find(store => store.id == store?.id)?.store_ads
 
     if (store_ad_name) {
       switch (length) {
@@ -271,7 +283,6 @@ function Index({ open, ads, storeId, setSelecteds, platform, stores }: Props) {
       setLoading(true);
       const results: any = [];
       const message = await getTemplateMessage(template.current)
-
       for await (const ad of ads) {
         const { name_ads_account, template_type } = ad;
         const date = `0${new Date().getDate()}`.slice(-2);
@@ -336,6 +347,8 @@ function Index({ open, ads, storeId, setSelecteds, platform, stores }: Props) {
           ...data_video,
           mb_record_id: getRecordId(ad["tags"]),
           redirect_url,
+          product_catalog: target?.product_catalog,
+          product_set: target?.product_set
         });
       }
       checkFulFillDataCreateCamp(results, templateType)
@@ -348,7 +361,7 @@ function Index({ open, ads, storeId, setSelecteds, platform, stores }: Props) {
     // setIsCreateCamp(false)
     setTitle("")
     mappingData();
-  }, [ads, open]);
+  }, [ads, open, target]);
 
   const handleChangeUser = debounce(
     (e: ChangeEvent<HTMLInputElement>) => {
@@ -576,6 +589,7 @@ function Index({ open, ads, storeId, setSelecteds, platform, stores }: Props) {
       ["Product Id"]: d.product_id,
       ["Video Name"]: d.video_name,
       ["Languages"]: d.languages,
+      ["Product set"]: d.product_set,
     }));
 
     const removeKeyFromObject = (obj: any, type: string) => {
@@ -794,7 +808,7 @@ function Index({ open, ads, storeId, setSelecteds, platform, stores }: Props) {
         templates: dataTemplates,
         page_id: page.current,
         type: templateType,
-        storeId,
+        storeId: store?.id,
         mb_name: name_user.current,
         user_id: parseInt(user["shop"] || "0", 10)
       });
@@ -994,7 +1008,7 @@ function Index({ open, ads, storeId, setSelecteds, platform, stores }: Props) {
   }
 
   const handleChooseSelect = (payload: PAYLOAD_SELECT) => {
-    const {value, record, field_name, is_all} = payload
+    const {value, record, field_name, is_all, data_update} = payload
 
     if (!is_all) {
       const currentDatas: Product[] = [...adsPreview];
@@ -1007,7 +1021,8 @@ function Index({ open, ads, storeId, setSelecteds, platform, stores }: Props) {
 
       currentDatas[findIndex] = {
         ...currentDatas[findIndex],
-        [field_name]: value,
+        // [field_name]: value,
+        ...data_update,
         name_ads_account: new_name_ads_account,
         template_adset_name: new_template_adset_name
       };
@@ -1018,16 +1033,18 @@ function Index({ open, ads, storeId, setSelecteds, platform, stores }: Props) {
 
     const currentDatas: Product[] = adsPreview.map(ad => {
       const {new_name_ads_account, new_template_adset_name} = handleChangeFieldOfAdset(field_name, {...ad, [field_name]: value})
-
+      const update_product_catalog = field_name === "product_set" && target.product_catalog ? {product_catalog: target.product_catalog} : {}
       return {
         ...ad,
-        [field_name]: value,
+        // [field_name]: value,
+        ...data_update,
         name_ads_account: new_name_ads_account,
-        template_adset_name: new_template_adset_name
+        template_adset_name: new_template_adset_name,
+        ...update_product_catalog,
       }
     })
-    const newTarget: any = {...target}
-    newTarget[field_name] = value
+    const newTarget: any = {...target, ...data_update}
+    // newTarget[field_name] = value
     setAdsPreview(currentDatas);
     setTarget(newTarget)
   }

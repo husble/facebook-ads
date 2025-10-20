@@ -1,13 +1,14 @@
-import React, { useCallback, useState } from 'react'
+import React, { useCallback, useEffect, useState } from 'react'
 
 import { GET_CONFIG } from '#/graphql/query'
-import { COUNTRIES, GENDERS, Product, TARGET, createAgeOptions } from '#/ultils'
+import { COUNTRIES, GENDERS, Product, TARGET, createAgeOptions, getProductsets } from '#/ultils'
 import { useQuery } from '@apollo/client'
 import axios from 'axios'
 import debounce from 'lodash.debounce'
 import { InputNumber, message, Radio, Select } from 'antd'
 import { CONFIG, DATA_VALUE, TYPE_TARGET } from '../Settings/Target/type'
 import { COUNTRY } from '../Facebook'
+import { CATAlOGS } from '#/ultils/config'
 
 
 const {Option} = Select
@@ -25,7 +26,8 @@ const AGES = createAgeOptions()
 function Index({record, handleChooseSelect, is_all, countries, setCountries}: Props) {
   const [targets, setTarget] = useState<any[]>([])
   const [loading, setLoading] = useState(false);
-
+  const [loadingProductSets, setLoadingProductSets] = useState(false);
+  const [productSets, setProductSet] = useState([])
   useQuery(GET_CONFIG, {
     variables: {
       where: {
@@ -67,6 +69,22 @@ function Index({record, handleChooseSelect, is_all, countries, setCountries}: Pr
     }
   })
 
+  useEffect(() => {
+    const fetchProductsets = async () => {
+      if (!record.product_catalog) return
+      setLoadingProductSets(true)
+      const {productSets} = await getProductsets(record.product_catalog)
+      const options = productSets.map((s: any) => ({
+        label: s.name,
+        value: s.id,
+      }));
+      setProductSet(options)
+      setLoadingProductSets(false)
+    }
+
+    fetchProductsets()
+  }, [record.product_catalog])
+
   const searchCountries = useCallback(debounce(async (value: string) => {
     try {
       setLoading(true)
@@ -84,8 +102,24 @@ function Index({record, handleChooseSelect, is_all, countries, setCountries}: Pr
   }, 300), [])
 
   const chooseCountry = (value: number[]) => {
-    handleChooseSelect({value, record, field_name: "languages", is_all})
+    const data_update = {languages: value}
+    handleChooseSelect({value, record, field_name: "languages", is_all, data_update})
   }
+
+  const chooseCatalog = async (value: string | number) => {
+    setLoadingProductSets(true)
+    const {productSets} = await getProductsets(value)
+    setProductSet(productSets)
+    handleChooseSelect({value, record, field_name: "", is_all, data_update: {
+      product_catalog: value,
+      product_set: productSets[0].id
+    }})
+    setLoadingProductSets(false)
+  }
+
+  const chooseProductsets = async (value: string | number) => {
+    handleChooseSelect({value, record, field_name: "product_set", is_all, data_update: {product_set: value}})
+  } 
 
   return (
     <div className='flex items-center flex-wrap gap-2'>
@@ -95,7 +129,7 @@ function Index({record, handleChooseSelect, is_all, countries, setCountries}: Pr
           prefix="$"
           value={record.ad_set_daily_budget}
           key={Math.random()}
-          onBlur={(e) => handleChooseSelect({value: e.target.value, record, field_name: "ad_set_daily_budget", is_all})}
+          onBlur={(e) => handleChooseSelect({value: e.target.value, record, field_name: "ad_set_daily_budget", is_all, data_update: {ad_set_daily_budget: e.target.value}})}
         />
       </div>
       <div className='flex items-center gap-1'>
@@ -105,7 +139,7 @@ function Index({record, handleChooseSelect, is_all, countries, setCountries}: Pr
           key={Math.random()}
           options={COUNTRIES}
           mode='multiple'
-          onChange={(value) => handleChooseSelect({value, record, field_name: "countries", is_all})}
+          onChange={(value) => handleChooseSelect({value, record, field_name: "countries", is_all, data_update: {countries: value}})}
         />
       </div>
       <div>
@@ -144,7 +178,7 @@ function Index({record, handleChooseSelect, is_all, countries, setCountries}: Pr
           key={Math.random()}
           value={record.age_min}
           showSearch
-          onChange={(value) => handleChooseSelect({value, record, field_name: "age_min", is_all})}
+          onChange={(value) => handleChooseSelect({value, record, field_name: "age_min", is_all, data_update: {age_min: value}})}
         >
           {AGES.map(age => (
             <Option key={age.label} value={age.value}>{age.label}</Option>
@@ -156,7 +190,7 @@ function Index({record, handleChooseSelect, is_all, countries, setCountries}: Pr
           key={Math.random()}
           value={record.age_max}
           showSearch
-          onChange={(value) => handleChooseSelect({value, record, field_name: "age_max", is_all})}
+          onChange={(value) => handleChooseSelect({value, record, field_name: "age_max", is_all, data_update: {age_max: value}})}
         >
           {AGES.map(age => (
             <Option key={age.label} value={age.value}>{age.label}</Option>
@@ -168,7 +202,7 @@ function Index({record, handleChooseSelect, is_all, countries, setCountries}: Pr
         <Radio.Group
           value={record.gender}
           key={Math.random()}
-          onChange={(e) => handleChooseSelect({value: e.target.value, record, field_name: "gender", is_all})}
+          onChange={(e) => handleChooseSelect({value: e.target.value, record, field_name: "gender", is_all, data_update: {gender: e.target.value}})}
         >
           {GENDERS.map(gender => (
             <Radio key={gender.value} value={gender.value}>{gender.label}</Radio>
@@ -182,7 +216,27 @@ function Index({record, handleChooseSelect, is_all, countries, setCountries}: Pr
           style={{width: 200}}
           options={targets}
           value={record.flexiable}
-          onChange={(value) => handleChooseSelect({value, record, field_name: "flexiable", is_all})}
+          onChange={(value) => handleChooseSelect({value, record, field_name: "flexiable", is_all, data_update: {flexiable: value}})}
+        />
+      </div>
+      <div style={{width: "100%"}} className='flex items-center gap-1'>
+        <strong>Ad sources:</strong>
+        <Select
+          key={Math.random()}
+          style={{width: 200}}
+          options={CATAlOGS}
+          value={record?.product_catalog}
+          onChange={chooseCatalog}
+        />
+        <Select
+          key={Math.random()}
+          style={{width: 200}}
+          options={productSets}
+          value={record?.product_set}
+          onChange={chooseProductsets}
+          loading={loadingProductSets}
+          disabled={loadingProductSets}
+          showSearch
         />
       </div>
     </div>

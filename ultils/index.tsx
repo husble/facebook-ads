@@ -111,7 +111,9 @@ export type Product = {
     code: number
   } | null;
   redirect_url: string;
-  languages: number[] | null
+  languages: number[] | null;
+  product_catalog: string | number | null;
+  product_set: string | number | null;
 };
 
 export type TARGET = {
@@ -121,14 +123,17 @@ export type TARGET = {
   age_min: number;
   gender: string;
   flexiable: string;
-  languages: number[] | null
+  languages: number[] | null;
+  product_catalog?: string | number | null;
+  product_set?: string | number | null;
 }
 
 export type PAYLOAD_SELECT = {
-  value: string | string[] | number | null;
+  value: string | string[] | number | null | number[];
   record: Product;
   field_name: string;
   is_all: boolean;
+  data_update: Record<string, string | string[] | number | null | number[]>
 }
 
 export type FbPixel = {
@@ -199,6 +204,19 @@ export async function getRedirectUlr(product_id: string, shop: string) {
       }
     })
     return redirect_url
+  } catch (error) {
+    message.error("Error when trying get redirect url, please check !!!")
+  }
+}
+
+export async function getProductsets(catalog_id: number | string) {
+  try {
+    
+    const {data} = await axios({
+      method: "GET",
+      url: process.env.FACEBOOK_API + `/facebook/${catalog_id}/product_sets`,
+    })
+    return data
   } catch (error) {
     message.error("Error when trying get redirect url, please check !!!")
   }

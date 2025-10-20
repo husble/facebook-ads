@@ -2,7 +2,7 @@
 
 import { useLazyQuery, useQuery } from '@apollo/client';
 import { Button, Checkbox, Input, message, Select, Table, Tag } from 'antd';
-import { ChangeEvent, Key, useContext, useEffect, useRef, useState } from 'react';
+import { ChangeEvent, useEffect, useRef, useState } from 'react';
 import Image from 'next/image';
 import debounce from 'lodash.debounce';
 import { FilterOutlined } from '@ant-design/icons';
@@ -15,19 +15,11 @@ import Step2 from '#/components/Step2';
 import withAuth from '#/ultils/withAuth';
 import ModalImage from '#/components/ShowImage';
 import Filter from '#/components/Filter';
-import { UserContext } from '#/components/UserContext';
 import { getRecordId, Product } from '#/ultils';
 import { CheckboxChangeEvent } from 'antd/es/checkbox';
+import { STORE } from '#/components/Settings/Store';
 
 const LIMIT = 25;
-
-export type STORE = {
-  id: Key;
-  shop: String;
-  timezone: String;
-  name: String;
-  store_ads: string;
-};
 
 type ProductType = {
   title: String;
@@ -50,25 +42,32 @@ function Home() {
   const [page, setPage] = useState<number>(1);
   const [view_record, setViewRecord] = useState<string>("")
   const storeSearch = useRef<string[]>([])
+  const [store, setStore] = useState<STORE | null>(null)
   const isVideo = useRef<boolean>(false)
   const [paramsCreatedAt, setParamsCreatedAt] = useState<
     Record<string, string>
   >({ _lte: '', _gte: '' });
-  const { user } = useContext(UserContext);
-  const storeRef = useRef<number>(200);
+  const storeRef = useRef<STORE | null>(null);
   const queries = useRef({
     where: {
-      _and: {
-        store_id: { _eq: 200 }
-      }
+      store_id: { _eq: 200 } 
     },
     limit: LIMIT,
     offset: 0
   });
 
   useQuery(GET_STORES, {
-    onCompleted: ({ store_2 }: any) => {
-      setStores(store_2);
+    onCompleted: ({ store_2 }: {store_2: STORE[]}) => {
+      const datas = store_2.filter(store => !!store.status_ads)
+      const initStore = datas[0]
+      setStore(initStore)
+      setStores(datas)
+      queries.current = {
+        ...queries.current,
+        where: {
+          store_id: { _eq: initStore.id }
+        }
+      }
     }
   });
 
@@ -87,13 +86,14 @@ function Home() {
   });
 
   useEffect(() => {
+    if (!store) return
     setLoading(true)
     fetchAds({
       variables: {
         ...queries.current
       }
     })
-  }, [])
+  }, [store])
 
   const handleShowImage = (image_url: string) => {
     setImageUrl(image_url);
@@ -213,8 +213,9 @@ function Home() {
     const matchedStore = stores.find((s: STORE) => s.shop === shop);
 
     if (matchedStore) {
-      const storeId = matchedStore.id as number;
-      storeRef.current = storeId;
+      const storeId = matchedStore;
+      storeRef.current = matchedStore;
+      setStore(matchedStore)
       handleFilterAds()
 
       // setLoading(false);
@@ -273,7 +274,7 @@ function Home() {
       ...queries.current,
       where: {
         store_id: {
-          _eq: storeRef.current
+          _eq: storeRef.current?.id
         },
         _and: datas,
         ...params
@@ -329,12 +330,14 @@ function Home() {
     <div>
       <header className="sticky top-0 z-50 py-4 px-5 shadow-shadow-section bg-white flex justify-between flex-wrap">
         <Select
-          defaultValue="pawsionate.myshopify.com"
+          defaultValue={stores[0]?.label || ""}
           onChange={handleSelectStore}
           options={stores.map((store: STORE) => ({
             value: store.shop,
-            label: store.shop
+            label: store.label
           }))}
+          key={stores[0]?.label || ""}
+          style={{minWidth: 200}}
         />
         <Input.Search
           allowClear
@@ -406,7 +409,7 @@ function Home() {
         setParamsCreatedAt={setParamsCreatedAt}
       />
       <Settings open={open} setOpen={setOpen} />
-      <Step2 stores={stores} storeId={storeRef.current} ads={selecteds} open={openStep2} setOpen={setOpenStep2} setSelecteds={setSelecteds} />
+      <Step2 stores={stores} store={store} ads={selecteds} open={openStep2} setOpen={setOpenStep2} setSelecteds={setSelecteds} />
       <ModalImage setImageUrl={setImageUrl} image_url={image_url} />
     </div>
   );
