@@ -43,12 +43,13 @@ function Home() {
   const [page, setPage] = useState<number>(1);
   const [view_record, setViewRecord] = useState<string>("")
   const storeSearch = useRef<string[]>([])
+  const [store, setStore] = useState<STORE | null>(null)
   const isVideo = useRef<boolean>(false)
   const [paramsCreatedAt, setParamsCreatedAt] = useState<
     Record<string, string>
   >({ _lte: '', _gte: '' });
   const { user } = useContext(UserContext);
-  const storeRef = useRef<number>(200);
+  const storeRef = useRef<STORE | null>(null);
   const queries = useRef({
     where: {
       _and: {
@@ -62,6 +63,7 @@ function Home() {
   useQuery(GET_STORES, {
     onCompleted: ({ store_2 }: {store_2: STORE[]}) => {
       const datas = store_2.filter(store => !!store.status_ads)
+      setStore(datas[0])
       setStores(datas)
     }
   });
@@ -207,8 +209,9 @@ function Home() {
     const matchedStore = stores.find((s: STORE) => s.shop === shop);
 
     if (matchedStore) {
-      const storeId = matchedStore.id as number;
-      storeRef.current = storeId;
+      const storeId = matchedStore;
+      storeRef.current = matchedStore;
+      setStore(matchedStore)
       handleFilterAds()
 
       // setLoading(false);
@@ -267,7 +270,7 @@ function Home() {
       ...queries.current,
       where: {
         store_id: {
-          _eq: storeRef.current
+          _eq: storeRef.current?.id
         },
         _and: datas,
         ...params
@@ -402,7 +405,7 @@ function Home() {
         setParamsCreatedAt={setParamsCreatedAt}
       />
       <Settings open={open} setOpen={setOpen} />
-      <Step2 stores={stores} storeId={storeRef.current} ads={selecteds} open={openStep2} setOpen={setOpenStep2} setSelecteds={setSelecteds} />
+      <Step2 stores={stores} store={store} ads={selecteds} open={openStep2} setOpen={setOpenStep2} setSelecteds={setSelecteds} />
       <ModalImage setImageUrl={setImageUrl} image_url={image_url} />
     </div>
   );

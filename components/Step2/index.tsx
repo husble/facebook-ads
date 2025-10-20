@@ -18,7 +18,7 @@ type Props = {
   open: boolean;
   setOpen: Function;
   ads: Product[];
-  storeId: number;
+  store: STORE | null;
   setSelecteds: Function;
   stores: STORE[]
 }
@@ -36,7 +36,7 @@ const PLATFORMS = [
   },
 ];
 
-function Index({ open, setOpen, ads, storeId, setSelecteds, stores }: Props) {
+function Index({ open, setOpen, ads, store, setSelecteds, stores }: Props) {
   const [platform, setPlatform] = useState<PLATFORM>(PLATFORMS[0].value);
   const [user, setUser] = useState<any>(null)
 
@@ -110,7 +110,7 @@ function Index({ open, setOpen, ads, storeId, setSelecteds, stores }: Props) {
         open={open}
         setOpen={setOpen}
         ads={ads}
-        storeId={storeId}
+        store={store}
         setSelecteds={setSelecteds}
         platform={platform}
         stores={stores}

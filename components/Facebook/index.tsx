@@ -36,7 +36,7 @@ type Props = {
   open: boolean;
   setOpen: Function;
   ads: Product[];
-  storeId: number;
+  store: STORE | null;
   setSelecteds: Function;
   platform: PLATFORM;
   stores: STORE[]
@@ -92,7 +92,7 @@ const createAdSetName = (payload: PayloadAdsetName): string => {
   return name
 }
 
-function Index({ open, ads, storeId, setSelecteds, platform, stores }: Props) {
+function Index({ open, ads, store, setSelecteds, platform, stores }: Props) {
   const [adsPreview, setAdsPreview] = useState<Product[]>([]);
   const [loading, setLoading] = useState<boolean>(false);
   const [isCreatePost, setIsCreatePost] = useState<Boolean>(false)
@@ -110,7 +110,9 @@ function Index({ open, ads, storeId, setSelecteds, platform, stores }: Props) {
     countries: ["US"],
     flexiable: "No",
     gender: "All",
-    languages: null
+    languages: null,
+    product_catalog: store?.product_catalog,
+    product_set: store?.product_set
   })
   const [pages, setPage] = useState<Page[]>([])
   const account = useRef<string>("")
@@ -156,6 +158,16 @@ function Index({ open, ads, storeId, setSelecteds, platform, stores }: Props) {
     }
   })
 
+  useEffect(() => {
+    if (!store) return
+
+    setTarget({
+      ...target,
+      product_catalog: store.product_catalog,
+      product_set: store.product_set
+    })
+  }, [store])
+
   useQuery(GET_TEMPLATE_ADS_COPY, {
     variables: {
       where: {}
@@ -172,7 +184,7 @@ function Index({ open, ads, storeId, setSelecteds, platform, stores }: Props) {
     onCompleted: ({ fb_pixels }) => {
       fbPixels.current = fb_pixels;
       const pixelDefault = () => {
-        const fb_pixel = fb_pixels.find((fb_pixel: FbPixel) => fb_pixel.store_id === storeId)
+        const fb_pixel = fb_pixels.find((fb_pixel: FbPixel) => fb_pixel.store_id === store?.id)
 
         pixel.current = fb_pixel
       }
@@ -195,7 +207,7 @@ function Index({ open, ads, storeId, setSelecteds, platform, stores }: Props) {
   const createNameAdWhenChangeCountries = (countries: string[], name_ads_account: string): string => {
     const length = countries.length
     let newName = name_ads_account
-    const store_ad_name = stores.find(store => store.id == storeId)?.store_ads
+    const store_ad_name = stores.find(store => store.id == store?.id)?.store_ads
 
     if (store_ad_name) {
       switch (length) {
@@ -271,7 +283,6 @@ function Index({ open, ads, storeId, setSelecteds, platform, stores }: Props) {
       setLoading(true);
       const results: any = [];
       const message = await getTemplateMessage(template.current)
-
       for await (const ad of ads) {
         const { name_ads_account, template_type } = ad;
         const date = `0${new Date().getDate()}`.slice(-2);
@@ -336,6 +347,8 @@ function Index({ open, ads, storeId, setSelecteds, platform, stores }: Props) {
           ...data_video,
           mb_record_id: getRecordId(ad["tags"]),
           redirect_url,
+          product_catalog: store?.product_catalog,
+          product_set: store?.product_set
         });
       }
       checkFulFillDataCreateCamp(results, templateType)
@@ -794,7 +807,7 @@ function Index({ open, ads, storeId, setSelecteds, platform, stores }: Props) {
         templates: dataTemplates,
         page_id: page.current,
         type: templateType,
-        storeId,
+        storeId: store?.id,
         mb_name: name_user.current,
         user_id: parseInt(user["shop"] || "0", 10)
       });

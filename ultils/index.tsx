@@ -111,7 +111,9 @@ export type Product = {
     code: number
   } | null;
   redirect_url: string;
-  languages: number[] | null
+  languages: number[] | null;
+  product_catalog: string | number | null;
+  product_set: string | number | null;
 };
 
 export type TARGET = {
@@ -121,7 +123,9 @@ export type TARGET = {
   age_min: number;
   gender: string;
   flexiable: string;
-  languages: number[] | null
+  languages: number[] | null;
+  product_catalog?: string | number | null;
+  product_set?: string | number | null;
 }
 
 export type PAYLOAD_SELECT = {
@@ -204,7 +208,7 @@ export async function getRedirectUlr(product_id: string, shop: string) {
   }
 }
 
-export async function getProductsets(catalog_id: string) {
+export async function getProductsets(catalog_id: number | string) {
   try {
     
     const {data} = await axios({

@@ -1,13 +1,14 @@
-import React, { useCallback, useState } from 'react'
+import React, { useCallback, useEffect, useState } from 'react'
 
 import { GET_CONFIG } from '#/graphql/query'
-import { COUNTRIES, GENDERS, Product, TARGET, createAgeOptions } from '#/ultils'
+import { COUNTRIES, GENDERS, Product, TARGET, createAgeOptions, getProductsets } from '#/ultils'
 import { useQuery } from '@apollo/client'
 import axios from 'axios'
 import debounce from 'lodash.debounce'
 import { InputNumber, message, Radio, Select } from 'antd'
 import { CONFIG, DATA_VALUE, TYPE_TARGET } from '../Settings/Target/type'
 import { COUNTRY } from '../Facebook'
+import { CATAlOGS } from '#/ultils/config'
 
 
 const {Option} = Select
@@ -25,7 +26,7 @@ const AGES = createAgeOptions()
 function Index({record, handleChooseSelect, is_all, countries, setCountries}: Props) {
   const [targets, setTarget] = useState<any[]>([])
   const [loading, setLoading] = useState(false);
-
+  const [productSets, setProductSet] = useState([])
   useQuery(GET_CONFIG, {
     variables: {
       where: {
@@ -67,6 +68,21 @@ function Index({record, handleChooseSelect, is_all, countries, setCountries}: Pr
     }
   })
 
+  useEffect(() => {
+    const fetchProductsets = async () => {
+      if (!record.product_catalog) return
+
+      const {productSets} = await getProductsets(record.product_catalog)
+      const options = productSets.map((s: any) => ({
+        label: s.name,
+        value: s.id,
+      }));
+      setProductSet(options)
+    }
+
+    fetchProductsets()
+  }, [record.product_catalog])
+
   const searchCountries = useCallback(debounce(async (value: string) => {
     try {
       setLoading(true)
@@ -85,6 +101,12 @@ function Index({record, handleChooseSelect, is_all, countries, setCountries}: Pr
 
   const chooseCountry = (value: number[]) => {
     handleChooseSelect({value, record, field_name: "languages", is_all})
+  }
+
+  const chooseCatalog = async (value: string | number) => {
+    handleChooseSelect({value, record, field_name: "product_catalog", is_all})
+    const {productSets} = await getProductsets(value)
+    handleChooseSelect({value: productSets[0].id, record, field_name: "product_set", is_all})
   }
 
   return (
@@ -183,6 +205,23 @@ function Index({record, handleChooseSelect, is_all, countries, setCountries}: Pr
           options={targets}
           value={record.flexiable}
           onChange={(value) => handleChooseSelect({value, record, field_name: "flexiable", is_all})}
+        />
+      </div>
+      <div>
+        <strong>Ad sources:</strong>
+        <Select
+          key={Math.random()}
+          style={{width: 200}}
+          options={CATAlOGS}
+          value={record?.product_catalog}
+          onChange={chooseCatalog}
+        />
+        <Select
+          key={Math.random()}
+          style={{width: 200}}
+          options={productSets}
+          value={record?.product_set}
+          // onChange={(value) => handleChooseSelect({value, record, field_name: "product_set", is_all})}
         />
       </div>
     </div>

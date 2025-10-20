@@ -1,8 +1,10 @@
 import { UPDATE_STORE } from '#/graphql/muation';
 import { GET_STORES } from '#/graphql/query'
+import { getProductsets } from '#/ultils';
+import { CATAlOGS } from '#/ultils/config';
 import { useMutation, useQuery } from '@apollo/client'
-import { Button, Checkbox, Form, Input, InputNumber, message, Popconfirm, Select, Table, Typography } from 'antd';
-import React, { Key, useCallback, useMemo, useState } from 'react'
+import { Checkbox, Form, Input, InputNumber, message, Select, Table, Typography } from 'antd';
+import React, { useState } from 'react'
 
 export type STORE = {
   id: number;
@@ -12,8 +14,9 @@ export type STORE = {
   store_ads: string;
   label: string;
   product_set: number | null;
+  product_catalog: number | null;
   status_ads: boolean;
-  options: {label: string; value: string | number}[]
+  options: {label: string; value: string | number}[];
 };
 
 interface EditableCellProps extends React.HTMLAttributes<HTMLElement> {
@@ -25,95 +28,157 @@ interface EditableCellProps extends React.HTMLAttributes<HTMLElement> {
   index: number;
   children: React.ReactNode;
   required?: boolean;
+  form: any
 }
 
 const {Option} = Select
-
-const EditableCell: React.FC<EditableCellProps> = ({
-  editing,
-  dataIndex,
-  title,
-  inputType,
-  record,
-  index,
-  children,
-  required = true,
-  onChange,
-  ...restProps
-}) => {
-  let inputNode =  <Input allowClear />;
-  switch (inputType) {
-    case "checkbox":
-      inputNode = <Checkbox />
-      break
-    case "number":
-      inputNode = <InputNumber />
-      break
-
-    case "select":
-      inputNode = <Select >
-        {record.options?.map(option => (
-          <Option key={option.label} value={option.value}>{option.label}</Option>
-        ))}
-      </Select>
-    default: break
-  }
-  return (
-    <td {...restProps}>
-      {editing ? (
-        <Form.Item
-          name={dataIndex}
-          style={{ margin: 0 }}
-          rules={[
-            {
-              required,
-              message: `Please Input ${title}!`,
-            },
-          ]}
-          valuePropName={inputType === "checkbox" ? "checked" : undefined}
-        >
-          {inputNode}
-        </Form.Item>
-      ) : (
-        children
-      )}
-    </td>
-  );
-}
 
 function Index() {
   const [stores, setStore] = useState<STORE[]>([])
   const [form] = Form.useForm()
   const [editingKey, setEditingKey] = useState<string>("");
   const [updateStore] = useMutation(UPDATE_STORE)
-  const catalogs = [
-    {
-      label: "A",
-      value: 1212121212
-    },
-    {
-      label: "B",
-      value: 12121212121212
+  const [productSetOptions, setProductSetOptions] = useState<{label: string; value: string | number}[]>([]);
+
+  const EditableCell: React.FC<EditableCellProps> = ({
+    editing,
+    dataIndex,
+    title,
+    inputType,
+    record,
+    index,
+    children,
+    required = true,
+    ...restProps
+  }) => {
+    let inputNode =  <Input allowClear />;
+      const [loadingSets, setLoadingSets] = useState(false);
+
+    switch (inputType) {
+      case "checkbox":
+        inputNode = <Checkbox />;
+        break;
+
+      case "number":
+        inputNode = <InputNumber />;
+        break;
+
+      case "select":
+        // Determine which field is being rendered
+        if (dataIndex === "product_catalog") {
+          inputNode = (
+            <Select
+              placeholder="Select catalog"
+              onChange={async (catalogId) => {
+                try {
+                  setLoadingSets(true);
+                  const {productSets} = await getProductsets(catalogId);
+                  const options = productSets.map((s: any) => ({
+                    label: s.name,
+                    value: s.id,
+                  }));
+
+                  setProductSetOptions(options);
+                  const firstSet = options[0]?.value ?? null;
+                  form.setFieldsValue({
+                    product_catalog: catalogId,
+                    product_set: firstSet,
+                  });
+                } catch (e) {
+                  setProductSetOptions([])
+                  message.error("Failed to load product sets");
+                  form.setFieldsValue({ product_set: null });
+                } finally {
+                  setLoadingSets(false);
+                }
+              }}
+            >
+              {record.options?.map(opt => (
+                <Option key={opt.value} value={opt.value}>{opt.label}</Option>
+              ))}
+            </Select>
+          );
+        } else if (dataIndex === "product_set") {
+          inputNode = (
+            <Select
+              placeholder="Select product set"
+              loading={loadingSets}
+              notFoundContent={loadingSets ? "Loading..." : null}
+            >
+              {productSetOptions.map(opt => (
+                <Option key={opt.value} value={opt.value}>{opt.label}</Option>
+              ))}
+            </Select>
+          );
+        }
+        break;
+      default:
+        break;
     }
-  ]
+    return (
+      <td {...restProps}>
+        {editing ? (
+          <Form.Item
+            name={dataIndex}
+            style={{ margin: 0 }}
+            rules={[
+              {
+                required,
+                message: `Please Input ${title}!`,
+              },
+            ]}
+            valuePropName={inputType === "checkbox" ? "checked" : undefined}
+          >
+            {inputNode}
+          </Form.Item>
+        ) : (
+          children
+        )}
+      </td>
+    );
+  }
 
   useQuery(GET_STORES, {
     onCompleted: ({store_2}) => setStore(store_2) 
   })
 
   const isEditing = (record: STORE) => record.shop === editingKey;
-  const edit = (record: STORE) => {
-    form.setFieldsValue({...record});
-    setEditingKey(record.shop);
-    const newStores = [...stores]
-    const index = newStores.findIndex(store => store.shop === record.shop)
-    newStores[index] = {
-      ...stores[index],
-      options: catalogs
+  const edit = async (record: STORE) => {
+    // Load product sets if catalog already exists
+    if (record.product_catalog) {
+      try {
+        const { productSets } = await getProductsets(record.product_catalog);
+        const options = productSets.map((s: any) => ({
+          label: s.name,
+          value: s.id,
+        }));
+        setProductSetOptions(options);
+      } catch (err) {
+        message.warning("Failed to load product sets for this catalog");
+        setProductSetOptions([]);
+      }
     }
 
-    setStore(newStores)
+    // set form values (including catalog & product_set)
+    form.setFieldsValue({
+      ...record,
+      product_catalog: record.product_catalog || null,
+      product_set: record.product_set || null,
+    });
+
+    // prepare editing
+    setEditingKey(record.shop);
+
+    // attach catalog list to this row
+    const newStores = [...stores];
+    const index = newStores.findIndex(store => store.shop === record.shop);
+    newStores[index] = {
+      ...stores[index],
+      options: CATAlOGS,
+    };
+    setStore(newStores);
   };
+
 
   const save = async (key: React.Key) => {
     try {
@@ -125,7 +190,8 @@ function Index() {
       newData.splice(index, 1, {
         ...item,
         ...row,
-        product_set: row.product_set || null
+        product_catalog: row.product_catalog || null,
+        product_set: row.product_set || null,
       });
       
       await updateStore({
@@ -133,7 +199,8 @@ function Index() {
           id: item.id,
           _set: {
             ...row,
-            product_set: row.product_set || null
+            product_set: row.product_set || null,
+            product_catalog: row.product_catalog || null,
           }
         }
       })
@@ -175,7 +242,6 @@ function Index() {
       editable: true,
       width: 300,
       required: false,
-      onChange: () => {}
     },
     {
       title: "Product set",
@@ -253,7 +319,7 @@ function Index() {
           rowClassName="editable-row"
           components={{
             body: {
-              cell: EditableCell,
+              cell: EditableCell
             },
           }}
           rowKey="shop"
