@@ -129,10 +129,11 @@ export type TARGET = {
 }
 
 export type PAYLOAD_SELECT = {
-  value: string | string[] | number | null;
+  value: string | string[] | number | null | number[];
   record: Product;
   field_name: string;
   is_all: boolean;
+  data_update: Record<string, string | string[] | number | null | number[]>
 }
 
 export type FbPixel = {

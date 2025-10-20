@@ -347,8 +347,8 @@ function Index({ open, ads, store, setSelecteds, platform, stores }: Props) {
           ...data_video,
           mb_record_id: getRecordId(ad["tags"]),
           redirect_url,
-          product_catalog: store?.product_catalog,
-          product_set: store?.product_set
+          product_catalog: target?.product_catalog,
+          product_set: target?.product_set
         });
       }
       checkFulFillDataCreateCamp(results, templateType)
@@ -361,7 +361,7 @@ function Index({ open, ads, store, setSelecteds, platform, stores }: Props) {
     // setIsCreateCamp(false)
     setTitle("")
     mappingData();
-  }, [ads, open]);
+  }, [ads, open, target]);
 
   const handleChangeUser = debounce(
     (e: ChangeEvent<HTMLInputElement>) => {
@@ -589,6 +589,7 @@ function Index({ open, ads, store, setSelecteds, platform, stores }: Props) {
       ["Product Id"]: d.product_id,
       ["Video Name"]: d.video_name,
       ["Languages"]: d.languages,
+      ["Product set"]: d.product_set,
     }));
 
     const removeKeyFromObject = (obj: any, type: string) => {
@@ -1007,7 +1008,7 @@ function Index({ open, ads, store, setSelecteds, platform, stores }: Props) {
   }
 
   const handleChooseSelect = (payload: PAYLOAD_SELECT) => {
-    const {value, record, field_name, is_all} = payload
+    const {value, record, field_name, is_all, data_update} = payload
 
     if (!is_all) {
       const currentDatas: Product[] = [...adsPreview];
@@ -1020,7 +1021,8 @@ function Index({ open, ads, store, setSelecteds, platform, stores }: Props) {
 
       currentDatas[findIndex] = {
         ...currentDatas[findIndex],
-        [field_name]: value,
+        // [field_name]: value,
+        ...data_update,
         name_ads_account: new_name_ads_account,
         template_adset_name: new_template_adset_name
       };
@@ -1031,16 +1033,18 @@ function Index({ open, ads, store, setSelecteds, platform, stores }: Props) {
 
     const currentDatas: Product[] = adsPreview.map(ad => {
       const {new_name_ads_account, new_template_adset_name} = handleChangeFieldOfAdset(field_name, {...ad, [field_name]: value})
-
+      const update_product_catalog = field_name === "product_set" && target.product_catalog ? {product_catalog: target.product_catalog} : {}
       return {
         ...ad,
-        [field_name]: value,
+        // [field_name]: value,
+        ...data_update,
         name_ads_account: new_name_ads_account,
-        template_adset_name: new_template_adset_name
+        template_adset_name: new_template_adset_name,
+        ...update_product_catalog,
       }
     })
-    const newTarget: any = {...target}
-    newTarget[field_name] = value
+    const newTarget: any = {...target, ...data_update}
+    // newTarget[field_name] = value
     setAdsPreview(currentDatas);
     setTarget(newTarget)
   }

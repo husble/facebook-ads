@@ -2,7 +2,7 @@
 
 import { useLazyQuery, useQuery } from '@apollo/client';
 import { Button, Checkbox, Input, message, Select, Table, Tag } from 'antd';
-import { ChangeEvent, Key, useContext, useEffect, useRef, useState } from 'react';
+import { ChangeEvent, useEffect, useRef, useState } from 'react';
 import Image from 'next/image';
 import debounce from 'lodash.debounce';
 import { FilterOutlined } from '@ant-design/icons';
@@ -15,7 +15,6 @@ import Step2 from '#/components/Step2';
 import withAuth from '#/ultils/withAuth';
 import ModalImage from '#/components/ShowImage';
 import Filter from '#/components/Filter';
-import { UserContext } from '#/components/UserContext';
 import { getRecordId, Product } from '#/ultils';
 import { CheckboxChangeEvent } from 'antd/es/checkbox';
 import { STORE } from '#/components/Settings/Store';
@@ -48,13 +47,10 @@ function Home() {
   const [paramsCreatedAt, setParamsCreatedAt] = useState<
     Record<string, string>
   >({ _lte: '', _gte: '' });
-  const { user } = useContext(UserContext);
   const storeRef = useRef<STORE | null>(null);
   const queries = useRef({
     where: {
-      _and: {
-        store_id: { _eq: 200 }
-      }
+      store_id: { _eq: 200 } 
     },
     limit: LIMIT,
     offset: 0
@@ -63,8 +59,15 @@ function Home() {
   useQuery(GET_STORES, {
     onCompleted: ({ store_2 }: {store_2: STORE[]}) => {
       const datas = store_2.filter(store => !!store.status_ads)
-      setStore(datas[0])
+      const initStore = datas[0]
+      setStore(initStore)
       setStores(datas)
+      queries.current = {
+        ...queries.current,
+        where: {
+          store_id: { _eq: initStore.id }
+        }
+      }
     }
   });
 
@@ -83,13 +86,14 @@ function Home() {
   });
 
   useEffect(() => {
+    if (!store) return
     setLoading(true)
     fetchAds({
       variables: {
         ...queries.current
       }
     })
-  }, [])
+  }, [store])
 
   const handleShowImage = (image_url: string) => {
     setImageUrl(image_url);

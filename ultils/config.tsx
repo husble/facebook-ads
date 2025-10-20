@@ -53,8 +53,8 @@ export const PAGES = [
 ]
 
 export const CATAlOGS = [
-  { label: "WRAPPINESS - Flexify", value: 750290970205806 },
-  { label: "Pawsionate - Flexify", value: 193169849274682 },
-  { label: "WRUK - Product Catalog", value: 1565226424821200 },
-  { label: "PAW UK - Product Catalog", value: 1454066192318244 }
+  { label: "WRAPPINESS - Flexify", value: "750290970205806" },
+  { label: "Pawsionate - Flexify", value: "193169849274682" },
+  { label: "WRUK - Product Catalog", value: "1565226424821200" },
+  { label: "PAW UK - Product Catalog", value: "1454066192318244" }
 ]
