@@ -215,15 +215,15 @@ function Index({ open, ads, store, setSelecteds, platform, stores }: Props) {
           newName = name_ads_account.replace(`[${store_ad_name} ALL`, `[${store_ad_name}`)
           break
   
-        case 2:
-        case 3:
-        case 4:
+        // case 2:
+        // case 3:
+        // case 4:
+        
+        default:
           if (name_ads_account.indexOf(`[${store_ad_name} ALL`) === -1) {
             newName = name_ads_account.replace(`[${store_ad_name}`, `[${store_ad_name} ALL`)
           }
           break
-  
-        default: break
       }
     }
 
