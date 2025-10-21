@@ -36,7 +36,9 @@ export const COUNTRIES = [
   { label: 'CA', value: 'CA' },
   { label: 'AU', value: 'AU' },
   { label: 'EU', value: 'EU' },
-  { label: 'FR', value: 'FR' }
+  { label: 'FR', value: 'FR' },
+  { label: 'UK', value: 'GB' },
+  { label: 'DE', value: 'DE' }
 ]
 
 export enum PLATFORM {

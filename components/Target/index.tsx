@@ -139,6 +139,7 @@ function Index({record, handleChooseSelect, is_all, countries, setCountries}: Pr
           key={Math.random()}
           options={COUNTRIES}
           mode='multiple'
+          style={{minWidth: 100}}
           onChange={(value) => handleChooseSelect({value, record, field_name: "countries", is_all, data_update: {countries: value}})}
         />
       </div>
@@ -227,6 +228,7 @@ function Index({record, handleChooseSelect, is_all, countries, setCountries}: Pr
           options={CATAlOGS}
           value={record?.product_catalog}
           onChange={chooseCatalog}
+          placeholder="Please select a catalog"
         />
         <Select
           key={Math.random()}
@@ -237,6 +239,7 @@ function Index({record, handleChooseSelect, is_all, countries, setCountries}: Pr
           loading={loadingProductSets}
           disabled={loadingProductSets}
           showSearch
+          placeholder="Please select a product set"
         />
       </div>
     </div>
