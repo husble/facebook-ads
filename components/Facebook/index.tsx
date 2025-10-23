@@ -207,23 +207,22 @@ function Index({ open, ads, store, setSelecteds, platform, stores }: Props) {
   const createNameAdWhenChangeCountries = (countries: string[], name_ads_account: string): string => {
     const length = countries.length
     let newName = name_ads_account
-    const store_ad_name = stores.find(store => store.id == store?.id)?.store_ads
-
+    const store_ad_name = stores.find(store_data => store_data.id == store?.id)?.store_ads
     if (store_ad_name) {
       switch (length) {
         case 1:
           newName = name_ads_account.replace(`[${store_ad_name} ALL`, `[${store_ad_name}`)
           break
   
-        case 2:
-        case 3:
-        case 4:
+        // case 2:
+        // case 3:
+        // case 4:
+        
+        default:
           if (name_ads_account.indexOf(`[${store_ad_name} ALL`) === -1) {
             newName = name_ads_account.replace(`[${store_ad_name}`, `[${store_ad_name} ALL`)
           }
           break
-  
-        default: break
       }
     }
 
