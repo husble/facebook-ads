@@ -47,11 +47,9 @@ function Home() {
   const [paramsCreatedAt, setParamsCreatedAt] = useState<
     Record<string, string>
   >({ _lte: '', _gte: '' });
-  const storeRef = useRef<STORE | null>(null);
+
   const queries = useRef({
-    where: {
-      store_id: { _eq: 200 } 
-    },
+    where: {},
     limit: LIMIT,
     offset: 0
   });
@@ -88,6 +86,13 @@ function Home() {
   useEffect(() => {
     if (!store) return
     setLoading(true)
+    queries.current = {
+      ...queries.current,
+      where: {
+        ...queries.current.where,
+        store_id: { _eq: store.id }
+      }
+    }
     fetchAds({
       variables: {
         ...queries.current
@@ -213,8 +218,6 @@ function Home() {
     const matchedStore = stores.find((s: STORE) => s.shop === shop);
 
     if (matchedStore) {
-      const storeId = matchedStore;
-      storeRef.current = matchedStore;
       setStore(matchedStore)
       handleFilterAds()
 
@@ -273,9 +276,7 @@ function Home() {
     const new_queries: any = {
       ...queries.current,
       where: {
-        store_id: {
-          _eq: storeRef.current?.id
-        },
+        ...queries.current.where,
         _and: datas,
         ...params
         // _or: params[0] ? [...params] : [{ title: { _ilike: '%%' } }]
