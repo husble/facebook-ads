@@ -347,7 +347,8 @@ function Index({ open, ads, store, setSelecteds, platform, stores }: Props) {
           mb_record_id: getRecordId(ad["tags"]),
           redirect_url,
           product_catalog: target?.product_catalog,
-          product_set: target?.product_set
+          product_set: target?.product_set,
+          languages: target.languages
         });
       }
       checkFulFillDataCreateCamp(results, templateType)
@@ -360,7 +361,7 @@ function Index({ open, ads, store, setSelecteds, platform, stores }: Props) {
     // setIsCreateCamp(false)
     setTitle("")
     mappingData();
-  }, [ads, open, target]);
+  }, [ads, open]);
 
   const handleChangeUser = debounce(
     (e: ChangeEvent<HTMLInputElement>) => {
